@@ -86,28 +86,42 @@ export default function App(){
   const isEligible = voterAge !== null && voterAge >= 18;
   function playStamp(){if(!muted)musicRef.current?.playStamp().catch(()=>setAudioError(true));}
   function pickStamp(){
-    if(phase==='ready'){setPhase('form');setVoteFormOpen(true);startMusic();}
+    if(phase==='ready'){setPhase('form');setFormStep('details');setFormError('');setVoteFormOpen(true);startMusic();}
     else if(phase==='verified')setPhase('armed');
     else if(phase==='armed')setPhase('verified');
   }
-  function stampPaper(id,event){
+  async function stampPaper(id,event){
     if(phase!=='armed')return;
     const origin=stampRef.current?.getBoundingClientRect();
     const target=event.currentTarget.getBoundingClientRect();
     if(!origin)return;
+    if(API_URL){
+      setPhase('submitting');setFormError('');
+      try{await api('vote/confirm',{method:'POST',body:JSON.stringify({name:voter.name,email:voter.email,dob:voter.dob,code:verificationCode,candidateId:id})});}
+      catch(e){setFormError(e.message);setPhase('armed');return;}
+    }
     setSelected(id);
     setFlight({left:origin.left,top:origin.top,width:origin.width,height:origin.height,dx:target.left+target.width/2-origin.left-origin.width/2,dy:target.top+target.height/2-origin.top-origin.height/2});
     setPhase('stamping');
     timer.current=window.setTimeout(()=>{setPhase('marked');playStamp();},900);
-    resultTimer.current=window.setTimeout(()=>{setCandidates(prev=>prev.map(c=>c.id===id?{...c,votes:c.votes+1}:c));setDailyVotes(prev=>[...prev,{day:new Date().toLocaleDateString('en-CA')}]);setPhase('voted');setFlight(null);setCelebrate(true);},1650);
+    resultTimer.current=window.setTimeout(()=>{
+      if(!API_URL){setCandidates(prev=>prev.map(c=>c.id===id?{...c,votes:c.votes+1}:c));setDailyVotes(prev=>[...prev,{day:new Date().toLocaleDateString('en-CA')}]);}
+      else api('public/results').then(results=>setCandidates(prev=>prev.map(c=>({...c,votes:results.counts[c.id]||0})))).catch(()=>{});
+      setPhase('voted');setFlight(null);setCelebrate(true);
+    },1650);
   }
-  function submitVote(event){
+  async function submitVote(event){
     event.preventDefault();
     if(!voter.name.trim()||!isEligible||!voter.email.trim())return;
-    setVoteFormOpen(false);
-    setPhase('verified');
+    if(!API_URL){setVoteFormOpen(false);setPhase('verified');return;}
+    setFormBusy(true);setFormError('');
+    try{
+      if(formStep==='details'){await api('vote/request-code',{method:'POST',body:JSON.stringify(voter)});setFormStep('otp');}
+      else{if(!/^\d{6}$/.test(verificationCode))throw Error('Enter a six-digit email code');setVoteFormOpen(false);setPhase('verified');}
+    }catch(e){setFormError(e.message);}
+    finally{setFormBusy(false);}
   }
-  function reset(){window.clearTimeout(timer.current);window.clearTimeout(resultTimer.current);setCandidates(initialCandidates);setDailyVotes([]);setSelected(null);setPhase('ready');setFlight(null);setConfirm(false);setVoteFormOpen(false);setPendingTarget(null);setCelebrate(false);setShareStatus('');setVoter({name:'',dob:'',email:''});}
+  function reset(){window.clearTimeout(timer.current);window.clearTimeout(resultTimer.current);setCandidates(initialCandidates);setDailyVotes([]);setSelected(null);setPhase('ready');setFlight(null);setConfirm(false);setVoteFormOpen(false);setPendingTarget(null);setCelebrate(false);setShareStatus('');setVoter({name:'',dob:'',email:''});setVerificationCode('');setFormStep('details');setFormError('');}
   async function shareWebsite(){
     const url=window.location.origin+window.location.pathname;
     const data={title:'Online Election — Ballot Paper',text:'Explore this independent public opinion voting demo.',url};
@@ -136,7 +150,7 @@ export default function App(){
       <section className="ballot-panel" id="ballot-section" aria-label="Digital ballot paper">
         <div className="ballot-heading"><div><h2><span className="heading-emoji">🗳️</span> Digital Ballot Paper</h2><p>Click the stamp to register, fill your details, then pick up the stamp again and choose a ballot paper.</p></div><div className="security"><Info size={18}/> Simulation only — no real vote stored</div></div>
         <div className="paper-grid">{candidates.map((c)=><button type="button" key={c.id} style={{'--candidate-color':c.color}} className={'paper '+(selected===c.id?'selected ':'')+(selected===c.id&&(phase==='marked'||phase==='voted')?'printed ':'')+(phase==='armed'?'targetable ':'')+((phase==='stamping'||phase==='marked'||phase==='voted')&&selected!==c.id?'dimmed':'')} onClick={e=>stampPaper(c.id,e)} disabled={phase!=='armed'} aria-label={phase==='armed'?'Choose '+c.name+' to open voter form':c.name}><span className="paper-name">{c.name}</span><span className="paper-image-area"><CandidateImage candidate={c} className="paper-symbol"/></span>{selected===c.id&&(phase==='marked'||phase==='voted')&&<div className="ink-overlay"><SwastikPrint/></div>}</button>)}</div>
-        <div className="stamp-zone"><button ref={stampRef} className={'stamp '+(phase==='armed'?'picked ':'')+(flight?'stamp-source-hidden':'')} onClick={pickStamp} disabled={!['ready','verified','armed'].includes(phase)} aria-pressed={phase==='armed'} aria-label={phase==='ready'?'Open voter registration':phase==='armed'?'Put stamp down':'Pick up stamp'}><span className="stamp-handle"/><span className="stamp-neck"/><span className="stamp-base">STAMP</span></button><p>{phase==='ready'?'Step 1: Click the stamp to open voter details':phase==='form'?'Fill your details — the stamp stays in place':phase==='verified'?'Step 2: Click the stamp again to pick it up':phase==='armed'?'Step 3: Click a ballot paper to stamp your vote':phase==='stamping'?'Stamp moving to your ballot…':phase==='marked'?'Swastik printed! Stamp returning…':'Your demo vote has been cast successfully!'}</p>{phase==='voted'&&<div className="success"><CheckCircle2 size={19}/> Demo vote recorded in this page only</div>}{audioError&&<p className="audio-error">Audio was blocked. Tap Play Background Music to try again.</p>}<div className="utility"><button onClick={reset}><RotateCcw size={15}/> Reset Demo</button><button onClick={toggleAudio}>{muted?<VolumeX size={15}/>:<Volume2 size={15}/>} {muted?'Play Background Music':'Mute Music'}</button></div></div>
+        <div className="stamp-zone"><button ref={stampRef} className={'stamp '+(phase==='armed'?'picked ':'')+(flight?'stamp-source-hidden':'')} onClick={pickStamp} disabled={!['ready','verified','armed'].includes(phase)} aria-pressed={phase==='armed'} aria-label={phase==='ready'?'Open voter registration':phase==='armed'?'Put stamp down':'Pick up stamp'}><span className="stamp-handle"/><span className="stamp-neck"/><span className="stamp-base">STAMP</span></button><p>{phase==='ready'?'Step 1: Click the stamp to open voter details':phase==='form'?'Fill your details — the stamp stays in place':phase==='verified'?'Step 2: Click the stamp again to pick it up':phase==='armed'?'Step 3: Click a ballot paper to stamp your vote':phase==='submitting'?'Verifying your vote…':phase==='stamping'?'Stamp moving to your ballot…':phase==='marked'?'Swastik printed! Stamp returning…':'Your demo vote has been cast successfully!'}</p>{phase==='voted'&&<div className="success"><CheckCircle2 size={19}/> Demo vote recorded in this page only</div>}{audioError&&<p className="audio-error">Audio was blocked. Tap Play Background Music to try again.</p>}<div className="utility"><button onClick={reset}><RotateCcw size={15}/> Reset Demo</button><button onClick={toggleAudio}>{muted?<VolumeX size={15}/>:<Volume2 size={15}/>} {muted?'Play Background Music':'Mute Music'}</button></div></div>
         {flight&&createPortal(<div className="flying-stamp" aria-hidden="true" style={{left:flight.left,top:flight.top,width:flight.width,height:flight.height,'--flight-x':flight.dx+'px','--flight-y':flight.dy+'px'}}><div className="stamp-handle"/><div className="stamp-neck"/><div className="stamp-base">STAMP</div></div>,document.body)}
       </section>
       <footer className="civic-footer"><div className="civic-footer-slogan">Your Voice Matters • Every Vote Counts • Choose Freely</div><div className="civic-footer-disclaimer"><ShieldCheck size={16}/> Independent, unofficial public opinion voting demo. Not affiliated with the Election Commission of India, any government body, or an official election. Results are simulated and are not official election results.</div><div className="civic-footer-note">Vote responsibly. Respect different opinions. Participation here does not replace voting in any official election.</div></footer>
