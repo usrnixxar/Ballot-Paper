@@ -38,7 +38,7 @@ export default function App(){
     setSelected(id);
     setFlight({left:origin.left,top:origin.top,width:origin.width,height:origin.height,dx:target.left+target.width/2-origin.left-origin.width/2,dy:target.top+target.height/2-origin.top-origin.height/2});
     setPhase('stamping');
-    timer.current=window.setTimeout(()=>{setPhase('marked');playStamp();},700);
+    timer.current=window.setTimeout(()=>{setPhase('marked');playStamp();},900);
     resultTimer.current=window.setTimeout(()=>{setCandidates(prev=>prev.map(c=>c.id===id?{...c,votes:c.votes+1}:c));setPhase('voted');setFlight(null);},1650);
   }
   function reset(){window.clearTimeout(timer.current);window.clearTimeout(resultTimer.current);setCandidates(initialCandidates);setSelected(null);setPhase('ready');setFlight(null);setConfirm(false);}
@@ -61,6 +61,6 @@ export default function App(){
       </section>
       <footer><ShieldCheck size={16}/> Educational frontend demo. Counts are fictional; no server, voter authentication or election security is implemented.</footer>
     </main>
-    {tab==='help'&&<div className="modal-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget)setTab('home')}}><div className="modal" role="dialog" aria-modal="true" aria-labelledby="help-title"><button className="close" onClick={()=>setTab('home')} aria-label="Close"><X/></button><h3 id="help-title">How to use the demo</h3><p>Choose one of the five ballot papers. Press the red VOTE stamp, confirm, and watch the ink impression and result bars animate.</p><p className="modal-note">Use Reset Demo to start again. This is not a real election.</p><button className="modal-done" onClick={()=>setTab('home')}>Got it</button></div></div>}
+    {tab==='help'&&<div className="modal-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget)setTab('home')}}><div className="modal" role="dialog" aria-modal="true" aria-labelledby="help-title"><button className="close" onClick={()=>setTab('home')} aria-label="Close"><X/></button><h3 id="help-title">How to use the demo</h3><p>First click the red STAMP to pick it up. Next, click one of the five ballot papers. The stamp flies onto it, prints a red Swastik and returns, while the demo result bars update.</p><p className="modal-note">Use Reset Demo to start again. This is not a real election.</p><button className="modal-done" onClick={()=>setTab('home')}>Got it</button></div></div>}
   </div>;
 }
