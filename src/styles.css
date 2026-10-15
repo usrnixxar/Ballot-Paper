@@ -204,3 +204,10 @@
 @media(max-width:1150px){.patriotic-topbar nav{grid-column:1/-1;grid-row:auto}.patriotic-topbar .voting-started-banner{grid-row:auto;grid-column:1/-1}}
 @media(max-width:640px){.patriotic-topbar .voting-started-banner{font-size:10px;padding:8px 10px;text-align:center;max-width:100%;white-space:normal}}
 @media(prefers-reduced-motion:reduce){.patriotic-topbar .voting-started-banner,.voting-started-dot{animation:none}}
+
+/* Celebration: primary Share Website, secondary Show Results. */
+.celebration-actions{display:flex;flex-direction:column;gap:10px;margin-top:12px}
+.celebration-share{display:flex;align-items:center;justify-content:center;gap:10px;background:linear-gradient(115deg,#159b64,#17b679);color:white;border:0;border-radius:14px;padding:14px 24px;font-weight:900;font-size:15px;box-shadow:0 7px 20px #12a76d3b}
+.celebration-share:hover{filter:brightness(1.08)}
+.celebration-actions .celebration-close{margin:0;background:#e9f0fc;color:#204e9b;box-shadow:none;border:1px solid #c5d7f6}
+.share-status{font-size:12px;color:#28775c;font-weight:700;margin:10px 0 0}
