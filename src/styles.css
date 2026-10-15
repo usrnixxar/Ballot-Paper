@@ -157,3 +157,28 @@
 .civic-footer-disclaimer svg{flex-shrink:0}
 .civic-footer-note{font-size:11px;color:#738098}
 @media(max-width:480px){.civic-footer{padding:14px 12px}.civic-footer-slogan{font-size:12px}.civic-footer-disclaimer{font-size:10px}}
+
+/* Indian tricolor navigation: decorative, non-government branding. */
+.patriotic-topbar{position:relative;display:grid;grid-template-columns:minmax(200px,1fr) auto minmax(250px,1fr);align-items:center;gap:18px;min-height:116px;padding:18px clamp(16px,2.3vw,38px) 18px clamp(92px,8vw,132px);isolation:isolate;border-bottom:3px solid #e5ebf6;background:linear-gradient(105deg,#fff1df,#fafdff 48%,#e5f5e6);overflow:hidden}
+.patriotic-wash{position:absolute;z-index:-1;inset:0;background:linear-gradient(180deg,rgba(255,153,51,.25) 0 28%,rgba(255,255,255,.36) 33% 67%,rgba(19,136,8,.15) 72% 100%);pointer-events:none}
+.flag-float{position:absolute;left:clamp(12px,2vw,30px);top:50%;display:flex;align-items:center;transform:translateY(-50%);animation:flagLevitate 3s ease-in-out infinite;filter:drop-shadow(0 5px 6px #4c577a30);z-index:2}
+.flag-mast{height:70px;width:4px;background:linear-gradient(90deg,#856c4d,#d8b780,#675238);border-radius:3px;flex:none}
+.flag-cloth{display:flex;flex-direction:column;width:61px;height:42px;overflow:hidden;transform:skewY(-3deg);border:1px solid #b3bac8;box-shadow:3px 3px 10px #34486728;animation:flagWave 2.7s ease-in-out infinite alternate}
+.flag-orange,.flag-white,.flag-green{display:flex;align-items:center;justify-content:center;flex:1}
+.flag-orange{background:#ff9933}.flag-white{background:white}.flag-green{background:#138808}
+.flag-white svg{width:15px;height:15px}
+.patriotic-brand{position:relative;z-index:2;min-width:0}
+.patriotic-brand strong{font-size:clamp(21px,2.1vw,30px)}
+.patriotic-brand small{font-size:clamp(10px,.85vw,12px);line-height:1.4}
+.nav-election-center{display:flex;align-items:center;justify-content:center;gap:12px;padding:11px 17px;background:#fffffff0;border:1px solid #e6dcbf;box-shadow:0 5px 14px #6d77a525;clip-path:var(--paper-cut);min-width:0}
+.nav-ballot-icon{font-size:38px;line-height:1}
+.nav-election-center strong,.nav-election-center small{display:block;white-space:nowrap}
+.nav-election-center strong{font-size:15px;letter-spacing:.4px;font-weight:900}
+.nav-election-center small{font-size:10px;font-weight:700;color:#526482;margin-top:3px}
+.patriotic-topbar nav{position:relative;z-index:2;justify-content:flex-end;flex-wrap:wrap}
+.patriotic-topbar nav button{padding:10px 11px;background:#ffffffae}
+@keyframes flagLevitate{0%,100%{transform:translateY(-50%)}50%{transform:translateY(calc(-50% - 7px))}}
+@keyframes flagWave{0%{transform:skewY(-3deg) perspective(120px) rotateY(-5deg)}100%{transform:skewY(2deg) perspective(120px) rotateY(7deg)}}
+@media(max-width:1150px){.patriotic-topbar{grid-template-columns:1fr auto;padding-left:100px;row-gap:12px}.patriotic-topbar nav{grid-column:1/-1;justify-content:center}.nav-election-center{justify-self:end}}
+@media(max-width:640px){.patriotic-topbar{padding:12px 12px 12px 70px;grid-template-columns:minmax(0,1fr);gap:9px}.flag-float{left:8px;top:54px}.flag-mast{height:57px}.flag-cloth{width:46px;height:32px}.flag-white svg{height:12px;width:12px}.patriotic-brand strong{font-size:21px}.patriotic-brand small{font-size:10px}.nav-election-center{justify-self:stretch;justify-content:flex-start;padding:7px 10px;gap:9px}.nav-ballot-icon{font-size:24px}.nav-election-center strong{font-size:12px}.nav-election-center small{font-size:9px}.patriotic-topbar nav{grid-column:1;justify-content:space-between;gap:2px}.patriotic-topbar nav button{padding:8px 5px;font-size:10px;gap:3px}.patriotic-topbar nav svg{width:15px;height:15px}}
+@media(prefers-reduced-motion:reduce){.flag-float,.flag-cloth{animation:none!important}}
