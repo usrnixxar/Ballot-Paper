@@ -38,6 +38,14 @@ function DailyVotesChart({votes}) {
 function BallotIllustration(){return <div className="ballot-illustration" aria-hidden="true"><div className="ballot-slip"><Check size={44} strokeWidth={4}/></div><div className="box-lid"/><div className="ballot-box"><span>YOUR VOTE<br/>COUNTS</span></div></div>}
 const API_URL=(import.meta.env.VITE_API_URL||'').replace(/\/$/,'');
 async function api(path,options={}){const r=await fetch(API_URL+'/api/'+path,{credentials:'include',...options,headers:{'Content-Type':'application/json',...(options.headers||{})}});const d=await r.json().catch(()=>({}));if(!r.ok)throw Error(d.error||'Server error');return d;}
+const POLL_URL='https://qqhkfygovznykpvknbrv.supabase.co';
+const POLL_KEY='sb_publishable_0SVQy01kVcQxIRHEMlRAjQ_SxZChlDb';
+async function pollRpc(name,payload={}){
+ const response=await fetch(POLL_URL+'/rest/v1/rpc/'+name,{method:'POST',headers:{'Content-Type':'application/json','apikey':POLL_KEY},body:JSON.stringify(payload)});
+ const data=await response.json().catch(()=>({}));
+ if(!response.ok)throw Error(data.message||data.error||'Unable to save vote');
+ return data;
+}
 const fmt = new Intl.NumberFormat('en-IN');
 export default function App(){
   const [candidates,setCandidates]=useState(initialCandidates);
@@ -66,19 +74,26 @@ export default function App(){
   function startMusic(){if(muted)return;musicRef.current?.start().catch(()=>{setAudioError(true);});}
   function toggleAudio(){if(muted){setMuted(false);setAudioError(false);musicRef.current?.start().catch(()=>setAudioError(true));}else{musicRef.current?.stop();setMuted(true);}}
   useEffect(()=>{
-    if(!API_URL)return;
     let active=true;
     async function refresh(){try{
-      const [rows,results]=await Promise.all([api('public/candidates'),api('public/results')]);
-      if(!active)return;
-      setCandidates(rows.map(c=>({...c,votes:results.counts[c.id]||0,imageUrl:c.imageUrl?API_URL+c.imageUrl:null})));
-      setDailyVotes(results.daily.flatMap(d=>Array.from({length:Math.min(d.count,1000)},()=>({day:d.day}))));
-    }catch(e){if(active)console.warn('Backend API unavailable',e.message);}}
-    const visitorId=(()=>{let value=sessionStorage.getItem('ballot_visit_id');if(!value){value=crypto.randomUUID();sessionStorage.setItem('ballot_visit_id',value);}return value;})();
-    const visit=()=>api('visit',{method:'POST',body:JSON.stringify({sessionId:visitorId})}).catch(()=>{});
-    refresh();visit();
-    const a=setInterval(refresh,10000),b=setInterval(visit,120000);
-    return ()=>{active=false;clearInterval(a);clearInterval(b);};
+      if(API_URL){
+        const [rows,results]=await Promise.all([api('public/candidates'),api('public/results')]);
+        if(active)setCandidates(rows.map(c=>({...c,votes:results.counts[c.id]||0,imageUrl:c.imageUrl?API_URL+c.imageUrl:null})));
+        if(active)setDailyVotes(results.daily.flatMap(d=>Array.from({length:Math.min(d.count,1000)},()=>({day:d.day}))));
+      }else{
+        const results=await pollRpc('poll_results');
+        if(active)setCandidates(prev=>prev.map(c=>({...c,votes:Number(results.counts?.[c.id]||0)})));
+        if(active)setDailyVotes((results.daily||[]).flatMap(d=>Array.from({length:Math.min(Number(d.count),1000)},()=>({day:d.day}))));
+      }
+    }catch(e){if(active)setFormError('Results connection: '+e.message);}}
+    refresh();
+    let visitTimer;
+    if(API_URL){const visitorId=(()=>{let v=sessionStorage.getItem('ballot_visit_id');if(!v){v=crypto.randomUUID();sessionStorage.setItem('ballot_visit_id',v);}return v;})();
+      const visit=()=>api('visit',{method:'POST',body:JSON.stringify({sessionId:visitorId})}).catch(()=>{});
+      visit();visitTimer=setInterval(visit,120000);
+    }
+    const pollTimer=setInterval(refresh,10000);
+    return ()=>{active=false;clearInterval(pollTimer);if(visitTimer)clearInterval(visitTimer);};
   },[]);
   const total=useMemo(()=>candidates.reduce((sum,c)=>sum+c.votes,0),[candidates]);
   const leader=useMemo(()=>total>0?[...candidates].sort((a,b)=>b.votes-a.votes)[0]?.id:null,[candidates,total]);
@@ -101,13 +116,17 @@ export default function App(){
       setPhase('submitting');setFormError('');
       try{await api('vote/confirm',{method:'POST',body:JSON.stringify({name:voter.name,email:voter.email,dob:voter.dob,code:verificationCode,candidateId:id})});}
       catch(e){setFormError(e.message);setPhase('armed');return;}
+    }else{
+      setPhase('submitting');setFormError('');
+      try{await pollRpc('cast_poll_vote',{p_name:voter.name,p_email:voter.email,p_dob:voter.dob,p_candidate:id});}
+      catch(e){setFormError(e.message);setPhase('armed');return;}
     }
     setSelected(id);
     setFlight({left:origin.left,top:origin.top,width:origin.width,height:origin.height,dx:target.left+target.width/2-origin.left-origin.width/2,dy:target.top+target.height/2-origin.top-origin.height/2});
     setPhase('stamping');
     timer.current=window.setTimeout(()=>{setPhase('marked');playStamp();},900);
     resultTimer.current=window.setTimeout(()=>{
-      if(!API_URL){setCandidates(prev=>prev.map(c=>c.id===id?{...c,votes:c.votes+1}:c));setDailyVotes(prev=>[...prev,{day:new Date().toLocaleDateString('en-CA')}]);}
+      if(!API_URL){pollRpc('poll_results').then(results=>{setCandidates(prev=>prev.map(c=>({...c,votes:Number(results.counts?.[c.id]||0)})));setDailyVotes((results.daily||[]).flatMap(d=>Array.from({length:Math.min(Number(d.count),1000)},()=>({day:d.day}))));}).catch(()=>{});}
       else api('public/results').then(results=>setCandidates(prev=>prev.map(c=>({...c,votes:results.counts[c.id]||0})))).catch(()=>{});
       setPhase('voted');setFlight(null);setCelebrate(true);
     },1650);
@@ -157,8 +176,8 @@ export default function App(){
       </section>
       <footer className="civic-footer"><div className="civic-footer-slogan">Your Voice Matters • Every Vote Counts • Choose Freely</div><div className="civic-footer-disclaimer"><ShieldCheck size={16}/> Independent, unofficial public opinion voting demo. Not affiliated with the Election Commission of India, any government body, or an official election. Results are simulated and are not official election results.</div><div className="civic-footer-note">Vote responsibly. Respect different opinions. Participation here does not replace voting in any official election.</div></footer>
     </main>
-    {voteFormOpen&&<div className="modal-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget){setVoteFormOpen(false);setPhase('ready');setSelected(null);setPendingTarget(null)}}}><div className="modal" role="dialog" aria-modal="true" aria-labelledby="voter-title"><button className="close" type="button" aria-label="Close voter form" onClick={()=>{setVoteFormOpen(false);setPhase('ready');setSelected(null);setPendingTarget(null)}}><X/></button><h3 id="voter-title">Voter Details</h3><p>Enter your details first. After submitting, pick up the stamp again and select a ballot paper.</p><form className="voter-form" onSubmit={submitVote}><label>Full Name<input autoFocus required type="text" autoComplete="name" maxLength={100} placeholder="Enter your name" value={voter.name} onChange={e=>setVoter(v=>({...v,name:e.target.value}))}/></label><label>Date of Birth<input required type="date" max={new Date().toLocaleDateString("en-CA")} value={voter.dob} onChange={e=>setVoter(v=>({...v,dob:e.target.value}))}/></label>{voter.dob&&<p className={isEligible?'eligibility-ok':'eligibility-error'} role="status">{voterAge===null?'Please enter a valid date of birth.':isEligible?'Eligible to vote — Age: '+voterAge:'Not eligible: You must be at least 18 years old to vote. Current age: '+voterAge}</p>}<label>Email Address<input required type="email" autoComplete="email" maxLength={254} placeholder="Enter your email" value={voter.email} onChange={e=>setVoter(v=>({...v,email:e.target.value}))}/></label>{API_URL&&formStep==='otp'&&<label>Email Verification Code<input required inputMode="numeric" maxLength={6} value={verificationCode} onChange={e=>setVerificationCode(e.target.value.replace(/[^0-9]/g,'').slice(0,6))} placeholder="Enter 6-digit OTP"/></label>}<p className="modal-note">{API_URL?'We send a verification code by email. Your voter details are saved privately for poll administration.':'Demo mode: details are not saved to a server.'}</p>{formError&&<p className="eligibility-error" role="alert">{formError}</p>}<button className="voter-submit" type="submit" disabled={!isEligible||formBusy}>{formBusy?'Please wait…':formStep==='otp'&&API_URL?'Verify & Continue':'Vote'}</button></form></div></div>}
-    {celebrate&&<div className="celebration-backdrop" role="presentation"><div className="confetti-scene" aria-hidden="true">{Array.from({length:48},(_,i)=><span key={i} className="confetti-piece" style={{'--i':i,'--x':((i*37)%100)+'%','--delay':((i*17)%13)*-0.14+'s','--duration':(2.5+(i%6)*.25)+'s','--hue':(i*47)%360}}/>)}</div><div className="celebration-dialog" role="dialog" aria-modal="true" aria-labelledby="celebration-title"><div className="celebration-trophy" aria-hidden="true">🎉</div><div className="celebration-check"><CheckCircle2 size={49}/></div><h2 id="celebration-title">Congratulations!</h2><p className="celebration-main">Your demo vote has been cast successfully!</p><div className="celebration-candidate">🗳️ {current?.name}</div><p className="celebration-disclaimer">This is a frontend demonstration. No real ballot was submitted.</p><div className="celebration-actions"><button type="button" className="celebration-share" onClick={shareWebsite}><Share2 size={18}/> Invite Others to Vote</button><button type="button" className="celebration-close" onClick={()=>{setCelebrate(false);navigate("results")}}>Show Results</button></div>{shareStatus&&<p className="share-status" role="status">{shareStatus}</p>}</div></div>}
+    {voteFormOpen&&<div className="modal-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget){setVoteFormOpen(false);setPhase('ready');setSelected(null);setPendingTarget(null)}}}><div className="modal" role="dialog" aria-modal="true" aria-labelledby="voter-title"><button className="close" type="button" aria-label="Close voter form" onClick={()=>{setVoteFormOpen(false);setPhase('ready');setSelected(null);setPendingTarget(null)}}><X/></button><h3 id="voter-title">Voter Details</h3><p>Enter your details first. After submitting, pick up the stamp again and select a ballot paper.</p><form className="voter-form" onSubmit={submitVote}><label>Full Name<input autoFocus required type="text" autoComplete="name" maxLength={100} placeholder="Enter your name" value={voter.name} onChange={e=>setVoter(v=>({...v,name:e.target.value}))}/></label><label>Date of Birth<input required type="date" max={new Date().toLocaleDateString("en-CA")} value={voter.dob} onChange={e=>setVoter(v=>({...v,dob:e.target.value}))}/></label>{voter.dob&&<p className={isEligible?'eligibility-ok':'eligibility-error'} role="status">{voterAge===null?'Please enter a valid date of birth.':isEligible?'Eligible to vote — Age: '+voterAge:'Not eligible: You must be at least 18 years old to vote. Current age: '+voterAge}</p>}<label>Email Address<input required type="email" autoComplete="email" maxLength={254} placeholder="Enter your email" value={voter.email} onChange={e=>setVoter(v=>({...v,email:e.target.value}))}/></label>{API_URL&&formStep==='otp'&&<label>Email Verification Code<input required inputMode="numeric" maxLength={6} value={verificationCode} onChange={e=>setVerificationCode(e.target.value.replace(/[^0-9]/g,'').slice(0,6))} placeholder="Enter 6-digit OTP"/></label>}<p className="modal-note">{API_URL?'We send a verification code by email. Your voter details are saved privately for poll administration.':'Public opinion poll: your details are stored privately. Email is not independently verified in this mode.'}</p>{formError&&<p className="eligibility-error" role="alert">{formError}</p>}<button className="voter-submit" type="submit" disabled={!isEligible||formBusy}>{formBusy?'Please wait…':formStep==='otp'&&API_URL?'Verify & Continue':'Vote'}</button></form></div></div>}
+    {celebrate&&<div className="celebration-backdrop" role="presentation"><div className="confetti-scene" aria-hidden="true">{Array.from({length:48},(_,i)=><span key={i} className="confetti-piece" style={{'--i':i,'--x':((i*37)%100)+'%','--delay':((i*17)%13)*-0.14+'s','--duration':(2.5+(i%6)*.25)+'s','--hue':(i*47)%360}}/>)}</div><div className="celebration-dialog" role="dialog" aria-modal="true" aria-labelledby="celebration-title"><div className="celebration-trophy" aria-hidden="true">🎉</div><div className="celebration-check"><CheckCircle2 size={49}/></div><h2 id="celebration-title">Congratulations!</h2><p className="celebration-main">Your demo vote has been cast successfully!</p><div className="celebration-candidate">🗳️ {current?.name}</div><p className="celebration-disclaimer">Independent public opinion poll — this is not an official election vote.</p><div className="celebration-actions"><button type="button" className="celebration-share" onClick={shareWebsite}><Share2 size={18}/> Invite Others to Vote</button><button type="button" className="celebration-close" onClick={()=>{setCelebrate(false);navigate("results")}}>Show Results</button></div>{shareStatus&&<p className="share-status" role="status">{shareStatus}</p>}</div></div>}
     {tab==='help'&&<div className="modal-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget)setTab('home')}}><div className="modal" role="dialog" aria-modal="true" aria-labelledby="help-title"><button className="close" onClick={()=>setTab('home')} aria-label="Close"><X/></button><h3 id="help-title">How to use the demo</h3><p>Click STAMP once to open voter details. Fill the form (18+ required) and press Vote. Then click STAMP again and choose a ballot paper. The stamp flies to the paper, prints the Swastik and returns.</p><p className="modal-note">Use Reset Demo to start again. This is not a real election.</p><button className="modal-done" onClick={()=>setTab('home')}>Got it</button></div></div>}
   </div>;
 }
