@@ -116,3 +116,9 @@
 .modal{max-height:calc(100dvh - 24px);overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin}
 @media(max-width:770px){.results-main{grid-template-columns:1fr;height:auto;flex:auto;min-height:0}.results-panel{min-height:0}.result-analytics{flex:auto;min-height:135px;height:auto}.gender-chart{min-height:125px}.modal{width:min(420px,100%);max-height:calc(100dvh - 20px)}}
 @media(max-width:460px){.result-analytics{grid-template-columns:1fr}.gender-chart{min-height:125px}.voter-form{gap:10px}.voter-form input,.voter-form select{padding:10px 11px}.modal h3{font-size:19px}}
+
+/* One full-width daily votes graph replacing demographic split. */
+.result-analytics{grid-template-columns:minmax(0,1fr)!important}
+.daily-votes-chart{width:100%;min-height:135px}
+.daily-votes-chart .daily-chart-columns{gap:16px}
+@media(max-width:460px){.result-analytics{grid-template-columns:minmax(0,1fr)!important}}
