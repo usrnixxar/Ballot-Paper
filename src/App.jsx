@@ -102,7 +102,7 @@ export default function App(){
   return <div className="page" id="page-top">
     <header className="topbar patriotic-topbar" onClickCapture={startMusic}>
       <div className="patriotic-wash" aria-hidden="true"/>
-      <div className="flag-float flag-video-container"><video className="flag-video" src="/video/flag.mp4" autoPlay muted loop playsInline preload="metadata" aria-label="Animated Indian flag"/><span className="flag-video-fallback" aria-hidden="true">🇮🇳</span></div>
+      
       <button className="brand patriotic-brand" onClick={()=>navigate('home')}><span><strong>{election.title}</strong><small>Independent Ballot-Based Public Opinion Platform</small></span></button>
       <div className="nav-election-center" aria-label="Online Election digital ballot"><span className="nav-ballot-icon" aria-hidden="true">🗳️</span><div><strong>ONLINE ELECTION</strong><small>Our Vote • Our Right • Ballot First</small></div></div>
       <div className="voting-started-banner"><span className="voting-started-dot" aria-hidden="true"/> Voting Started on 15 October 2026</div>
