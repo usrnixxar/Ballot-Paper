@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { BarChart3, Check, CheckCircle2, CircleHelp, Crown, Home, Info, RotateCcw, ShieldCheck, Volume2, VolumeX, Vote, X } from 'lucide-react';
+import { BarChart3, Check, CheckCircle2, CircleHelp, Crown, Home, Info, RotateCcw, ShieldCheck, Volume2, VolumeX, Vote, X, Share2, Copy } from 'lucide-react';
 import { election, initialCandidates } from './data';
 import { createAnthemPiano } from './music';
 
@@ -52,6 +52,7 @@ export default function App(){
   const [flight,setFlight]=useState(null);
   const [voteFormOpen,setVoteFormOpen]=useState(false);
   const [celebrate,setCelebrate]=useState(false);
+  const [shareStatus,setShareStatus]=useState('');
   const [voter,setVoter]=useState({name:'',dob:'',email:''});
  const [dailyVotes,setDailyVotes]=useState([]);
   const [pendingTarget,setPendingTarget]=useState(null);
@@ -87,7 +88,16 @@ export default function App(){
     setVoteFormOpen(false);
     setPhase('verified');
   }
-  function reset(){window.clearTimeout(timer.current);window.clearTimeout(resultTimer.current);setCandidates(initialCandidates);setDailyVotes([]);setSelected(null);setPhase('ready');setFlight(null);setConfirm(false);setVoteFormOpen(false);setPendingTarget(null);setCelebrate(false);setVoter({name:'',dob:'',email:''});}
+  function reset(){window.clearTimeout(timer.current);window.clearTimeout(resultTimer.current);setCandidates(initialCandidates);setDailyVotes([]);setSelected(null);setPhase('ready');setFlight(null);setConfirm(false);setVoteFormOpen(false);setPendingTarget(null);setCelebrate(false);setShareStatus('');setVoter({name:'',dob:'',email:''});}
+  async function shareWebsite(){
+    const url=window.location.origin+window.location.pathname;
+    const data={title:'Online Election — Ballot Paper',text:'Explore this independent public opinion voting demo.',url};
+    try{
+      if(navigator.share){await navigator.share(data);setShareStatus('Share menu opened');}
+      else if(navigator.clipboard?.writeText){await navigator.clipboard.writeText(url);setShareStatus('Website link copied!');}
+      else{window.prompt('Copy website link:',url);setShareStatus('Copy the link to share');}
+    }catch(error){if(error?.name!=='AbortError')setShareStatus('Unable to share. Please copy the website URL.');}
+  }
   function navigate(key){setTab(key);document.getElementById(key==='vote'?'ballot-section':key==='results'?'result-section':'page-top')?.scrollIntoView({behavior:'smooth',block:'start'});}
   return <div className="page" id="page-top">
     <header className="topbar patriotic-topbar" onClickCapture={startMusic}>
@@ -116,7 +126,7 @@ export default function App(){
       <footer className="civic-footer"><div className="civic-footer-slogan">Your Voice Matters • Every Vote Counts • Choose Freely</div><div className="civic-footer-disclaimer"><ShieldCheck size={16}/> Independent, unofficial public opinion voting demo. Not affiliated with the Election Commission of India, any government body, or an official election. Results are simulated and are not official election results.</div><div className="civic-footer-note">Vote responsibly. Respect different opinions. Participation here does not replace voting in any official election.</div></footer>
     </main>
     {voteFormOpen&&<div className="modal-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget){setVoteFormOpen(false);setPhase('ready');setSelected(null);setPendingTarget(null)}}}><div className="modal" role="dialog" aria-modal="true" aria-labelledby="voter-title"><button className="close" type="button" aria-label="Close voter form" onClick={()=>{setVoteFormOpen(false);setPhase('ready');setSelected(null);setPendingTarget(null)}}><X/></button><h3 id="voter-title">Voter Details</h3><p>Enter your details first. After submitting, pick up the stamp again and select a ballot paper.</p><form className="voter-form" onSubmit={submitVote}><label>Full Name<input autoFocus required type="text" autoComplete="name" maxLength={100} placeholder="Enter your name" value={voter.name} onChange={e=>setVoter(v=>({...v,name:e.target.value}))}/></label><label>Date of Birth<input required type="date" max={new Date().toLocaleDateString("en-CA")} value={voter.dob} onChange={e=>setVoter(v=>({...v,dob:e.target.value}))}/></label>{voter.dob&&<p className={isEligible?'eligibility-ok':'eligibility-error'} role="status">{voterAge===null?'Please enter a valid date of birth.':isEligible?'Eligible to vote — Age: '+voterAge:'Not eligible: You must be at least 18 years old to vote. Current age: '+voterAge}</p>}<label>Email Address<input required type="email" autoComplete="email" maxLength={254} placeholder="Enter your email" value={voter.email} onChange={e=>setVoter(v=>({...v,email:e.target.value}))}/></label><p className="modal-note">Frontend demo only: these details are not submitted to a server or permanently stored.</p><button className="voter-submit" type="submit" disabled={!isEligible}>Vote</button></form></div></div>}
-    {celebrate&&<div className="celebration-backdrop" role="presentation"><div className="confetti-scene" aria-hidden="true">{Array.from({length:48},(_,i)=><span key={i} className="confetti-piece" style={{'--i':i,'--x':((i*37)%100)+'%','--delay':((i*17)%13)*-0.14+'s','--duration':(2.5+(i%6)*.25)+'s','--hue':(i*47)%360}}/>)}</div><div className="celebration-dialog" role="dialog" aria-modal="true" aria-labelledby="celebration-title"><div className="celebration-trophy" aria-hidden="true">🎉</div><div className="celebration-check"><CheckCircle2 size={49}/></div><h2 id="celebration-title">Congratulations!</h2><p className="celebration-main">Your demo vote has been cast successfully!</p><div className="celebration-candidate">🗳️ {current?.name}</div><p className="celebration-disclaimer">This is a frontend demonstration. No real ballot was submitted.</p><button type="button" className="celebration-close" onClick={()=>setCelebrate(false)}>Continue to Results</button></div></div>}
+    {celebrate&&<div className="celebration-backdrop" role="presentation"><div className="confetti-scene" aria-hidden="true">{Array.from({length:48},(_,i)=><span key={i} className="confetti-piece" style={{'--i':i,'--x':((i*37)%100)+'%','--delay':((i*17)%13)*-0.14+'s','--duration':(2.5+(i%6)*.25)+'s','--hue':(i*47)%360}}/>)}</div><div className="celebration-dialog" role="dialog" aria-modal="true" aria-labelledby="celebration-title"><div className="celebration-trophy" aria-hidden="true">🎉</div><div className="celebration-check"><CheckCircle2 size={49}/></div><h2 id="celebration-title">Congratulations!</h2><p className="celebration-main">Your demo vote has been cast successfully!</p><div className="celebration-candidate">🗳️ {current?.name}</div><p className="celebration-disclaimer">This is a frontend demonstration. No real ballot was submitted.</p><div className="celebration-actions"><button type="button" className="celebration-share" onClick={shareWebsite}><Share2 size={18}/> Share Website</button><button type="button" className="celebration-close" onClick={()=>{setCelebrate(false);navigate("results")}}>Show Results</button></div>{shareStatus&&<p className="share-status" role="status">{shareStatus}</p>}</div></div>}
     {tab==='help'&&<div className="modal-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget)setTab('home')}}><div className="modal" role="dialog" aria-modal="true" aria-labelledby="help-title"><button className="close" onClick={()=>setTab('home')} aria-label="Close"><X/></button><h3 id="help-title">How to use the demo</h3><p>Click STAMP once to open voter details. Fill the form (18+ required) and press Vote. Then click STAMP again and choose a ballot paper. The stamp flies to the paper, prints the Swastik and returns.</p><p className="modal-note">Use Reset Demo to start again. This is not a real election.</p><button className="modal-done" onClick={()=>setTab('home')}>Got it</button></div></div>}
   </div>;
 }
