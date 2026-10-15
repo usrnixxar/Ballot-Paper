@@ -23,6 +23,9 @@ export default function App(){
   const resultTimer=useRef(null);
   const stampRef=useRef(null);
   const [flight,setFlight]=useState(null);
+  const [voteFormOpen,setVoteFormOpen]=useState(false);
+  const [voter,setVoter]=useState({name:'',dob:'',email:''});
+  const [pendingTarget,setPendingTarget]=useState(null);
   useEffect(()=>()=>{window.clearTimeout(timer.current);window.clearTimeout(resultTimer.current)},[]);
   const total=useMemo(()=>candidates.reduce((sum,c)=>sum+c.votes,0),[candidates]);
   const leader=useMemo(()=>[...candidates].sort((a,b)=>b.votes-a.votes)[0]?.id,[candidates]);
@@ -36,12 +39,23 @@ export default function App(){
     const target=event.currentTarget.getBoundingClientRect();
     if(!origin)return;
     setSelected(id);
-    setFlight({left:origin.left,top:origin.top,width:origin.width,height:origin.height,dx:target.left+target.width/2-origin.left-origin.width/2,dy:target.top+target.height/2-origin.top-origin.height/2});
+    setPendingTarget({id,dx:target.left+target.width/2-origin.left-origin.width/2,dy:target.top+target.height/2-origin.top-origin.height/2});
+    setVoteFormOpen(true);
+    setPhase('form');
+  }
+  function submitVote(event){
+    event.preventDefault();
+    if(!pendingTarget||!voter.name.trim()||!voter.dob||!voter.email.trim())return;
+    const origin=stampRef.current?.getBoundingClientRect();
+    if(!origin)return;
+    const {id,dx,dy}=pendingTarget;
+    setVoteFormOpen(false);
+    setFlight({left:origin.left,top:origin.top,width:origin.width,height:origin.height,dx,dy});
     setPhase('stamping');
     timer.current=window.setTimeout(()=>{setPhase('marked');playStamp();},900);
     resultTimer.current=window.setTimeout(()=>{setCandidates(prev=>prev.map(c=>c.id===id?{...c,votes:c.votes+1}:c));setPhase('voted');setFlight(null);},1650);
   }
-  function reset(){window.clearTimeout(timer.current);window.clearTimeout(resultTimer.current);setCandidates(initialCandidates);setSelected(null);setPhase('ready');setFlight(null);setConfirm(false);}
+  function reset(){window.clearTimeout(timer.current);window.clearTimeout(resultTimer.current);setCandidates(initialCandidates);setSelected(null);setPhase('ready');setFlight(null);setConfirm(false);setVoteFormOpen(false);setPendingTarget(null);setVoter({name:'',dob:'',email:''});}
   function navigate(key){setTab(key);document.getElementById(key==='vote'?'ballot-section':key==='results'?'result-section':'page-top')?.scrollIntoView({behavior:'smooth',block:'start'});}
   return <div className="page" id="page-top">
     <header className="topbar">
@@ -55,12 +69,13 @@ export default function App(){
       </section>
       <section className="ballot-panel" id="ballot-section" aria-label="Digital ballot paper">
         <div className="ballot-heading"><div><h2><span className="heading-emoji">🗳️</span> Digital Ballot Paper</h2><p>Pick up the stamp first, then click a ballot paper to stamp your vote.</p></div><div className="security"><Info size={18}/> Simulation only — no real vote stored</div></div>
-        <div className="paper-grid">{candidates.map((c)=><button type="button" key={c.id} style={{'--candidate-color':c.color}} className={'paper '+(selected===c.id?'selected ':'')+(selected===c.id&&(phase==='marked'||phase==='voted')?'printed ':'')+(phase==='armed'?'targetable ':'')+((phase==='stamping'||phase==='marked'||phase==='voted')&&selected!==c.id?'dimmed':'')} onClick={e=>stampPaper(c.id,e)} disabled={phase!=='armed'} aria-label={phase==='armed'?'Stamp '+c.name:c.name}><span className="paper-name">{c.name}</span><Symbol type={c.symbol} className="paper-symbol"/><span className="ballot-circle"/>{selected===c.id&&(phase==='marked'||phase==='voted')&&<div className="ink-overlay"><SwastikPrint/></div>}</button>)}</div>
-        <div className="stamp-zone"><button ref={stampRef} className={'stamp '+(phase==='armed'?'picked ':'')+(flight?'stamp-source-hidden':'')} onClick={pickStamp} disabled={!['ready','armed'].includes(phase)} aria-pressed={phase==='armed'} aria-label={phase==='armed'?'Put stamp down':'Pick up stamp'}><span className="stamp-handle"/><span className="stamp-neck"/><span className="stamp-base">STAMP</span></button><p>{phase==='ready'?'Step 1: Click the stamp to pick it up':phase==='armed'?'Step 2: Stamp picked up! Click the ballot paper you want to vote for':phase==='stamping'?'Stamp moving to your ballot…':phase==='marked'?'Swastik printed! Stamp returning…':'Your demo vote has been cast successfully!'}</p>{phase==='voted'&&<div className="success"><CheckCircle2 size={19}/> Demo vote recorded in this page only</div>}<div className="utility"><button onClick={reset}><RotateCcw size={15}/> Reset Demo</button><button onClick={()=>setMuted(m=>!m)}>{muted?<VolumeX size={15}/>:<Volume2 size={15}/>} {muted?'Unmute':'Mute'}</button></div></div>
+        <div className="paper-grid">{candidates.map((c)=><button type="button" key={c.id} style={{'--candidate-color':c.color}} className={'paper '+(selected===c.id?'selected ':'')+(selected===c.id&&(phase==='marked'||phase==='voted')?'printed ':'')+(phase==='armed'?'targetable ':'')+((phase==='stamping'||phase==='marked'||phase==='voted')&&selected!==c.id?'dimmed':'')} onClick={e=>stampPaper(c.id,e)} disabled={phase!=='armed'} aria-label={phase==='armed'?'Choose '+c.name+' to open voter form':c.name}><span className="paper-name">{c.name}</span><Symbol type={c.symbol} className="paper-symbol"/><span className="ballot-circle"/>{selected===c.id&&(phase==='marked'||phase==='voted')&&<div className="ink-overlay"><SwastikPrint/></div>}</button>)}</div>
+        <div className="stamp-zone"><button ref={stampRef} className={'stamp '+(phase==='armed'?'picked ':'')+(flight?'stamp-source-hidden':'')} onClick={pickStamp} disabled={!['ready','armed'].includes(phase)} aria-pressed={phase==='armed'} aria-label={phase==='armed'?'Put stamp down':'Pick up stamp'}><span className="stamp-handle"/><span className="stamp-neck"/><span className="stamp-base">STAMP</span></button><p>{phase==='ready'?'Step 1: Click the stamp to pick it up':phase==='armed'?'Step 2: Stamp picked up! Click the ballot paper you want to vote for':phase==='form'?'Complete voter details to confirm your demo vote':phase==='stamping'?'Stamp moving to your ballot…':phase==='marked'?'Swastik printed! Stamp returning…':'Your demo vote has been cast successfully!'}</p>{phase==='voted'&&<div className="success"><CheckCircle2 size={19}/> Demo vote recorded in this page only</div>}<div className="utility"><button onClick={reset}><RotateCcw size={15}/> Reset Demo</button><button onClick={()=>setMuted(m=>!m)}>{muted?<VolumeX size={15}/>:<Volume2 size={15}/>} {muted?'Unmute':'Mute'}</button></div></div>
         {flight&&<div className="flying-stamp" aria-hidden="true" style={{left:flight.left,top:flight.top,width:flight.width,height:flight.height,'--flight-x':flight.dx+'px','--flight-y':flight.dy+'px'}}><div className="stamp-handle"/><div className="stamp-neck"/><div className="stamp-base">STAMP</div></div>}
       </section>
       <footer><ShieldCheck size={16}/> Educational frontend demo. Counts are fictional; no server, voter authentication or election security is implemented.</footer>
     </main>
+    {voteFormOpen&&<div className="modal-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget){setVoteFormOpen(false);setPhase('armed');setSelected(null);setPendingTarget(null)}}}><div className="modal" role="dialog" aria-modal="true" aria-labelledby="voter-title"><button className="close" type="button" aria-label="Close voter form" onClick={()=>{setVoteFormOpen(false);setPhase('armed');setSelected(null);setPendingTarget(null)}}><X/></button><h3 id="voter-title">Voter Details</h3><p>You've selected <b>{current?.name}</b>. Enter your details to continue the demo.</p><form className="voter-form" onSubmit={submitVote}><label>Full Name<input autoFocus required type="text" autoComplete="name" maxLength={100} placeholder="Enter your name" value={voter.name} onChange={e=>setVoter(v=>({...v,name:e.target.value}))}/></label><label>Date of Birth<input required type="date" max={new Date().toISOString().slice(0,10)} value={voter.dob} onChange={e=>setVoter(v=>({...v,dob:e.target.value}))}/></label><label>Email Address<input required type="email" autoComplete="email" maxLength={254} placeholder="Enter your email" value={voter.email} onChange={e=>setVoter(v=>({...v,email:e.target.value}))}/></label><p className="modal-note">Frontend demo only: these details are not submitted to a server or permanently stored.</p><button className="voter-submit" type="submit">Vote</button></form></div></div>}
     {tab==='help'&&<div className="modal-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget)setTab('home')}}><div className="modal" role="dialog" aria-modal="true" aria-labelledby="help-title"><button className="close" onClick={()=>setTab('home')} aria-label="Close"><X/></button><h3 id="help-title">How to use the demo</h3><p>First click the red STAMP to pick it up. Next, click one of the five ballot papers. The stamp flies onto it, prints a red Swastik and returns, while the demo result bars update.</p><p className="modal-note">Use Reset Demo to start again. This is not a real election.</p><button className="modal-done" onClick={()=>setTab('home')}>Got it</button></div></div>}
   </div>;
 }
