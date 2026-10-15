@@ -274,3 +274,7 @@
 .flag-video-fallback{display:none;font-size:42px}
 @media(max-width:770px){.patriotic-topbar .flag-video-container{position:relative;left:auto;top:auto;transform:none}.flag-video{width:84px;height:65px}}
 @media(max-width:440px){.flag-video{width:76px;height:57px}}
+
+/* Keep navbar flag video stationary; the video itself may still animate. */
+.flag-float.flag-video-container,.patriotic-topbar .flag-float.flag-video-container{animation:none!important;transform:translateY(-50%)}
+@media(max-width:770px){.flag-float.flag-video-container,.patriotic-topbar .flag-float.flag-video-container{transform:none!important}}
