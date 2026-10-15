@@ -93,6 +93,7 @@ export default function App(){
       </div>
       <button className="brand patriotic-brand" onClick={()=>navigate('home')}><span><strong>{election.title}</strong><small>Independent Ballot-Based Public Opinion Platform</small></span></button>
       <div className="nav-election-center" aria-label="Online Election digital ballot"><span className="nav-ballot-icon" aria-hidden="true">🗳️</span><div><strong>ONLINE ELECTION</strong><small>Our Vote • Our Right • Ballot First</small></div></div>
+      <div className="voting-started-banner"><span className="voting-started-dot" aria-hidden="true"/> Voting Started on 15 October 2026</div>
       <nav aria-label="Main navigation"><button className={tab==='home'?'active':''} onClick={()=>navigate('home')}><Home/> Home</button><button className={tab==='results'?'active':''} onClick={()=>navigate('results')}><BarChart3/> Results</button><button className={tab==='vote'?'active':''} onClick={()=>navigate('vote')}><Vote/> Vote</button><button onClick={()=>setTab('help')} className={tab==='help'?'active':''}><CircleHelp/> Help</button></nav>
     </header>
     <main>
