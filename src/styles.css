@@ -23,3 +23,8 @@
 .voter-submit{margin-top:2px;border:0;border-radius:12px;background:linear-gradient(120deg,#db1934,#f04455);color:#fff;font-size:16px;font-weight:900;padding:14px;box-shadow:0 5px 16px #db19343b}
 .voter-submit:hover{filter:brightness(1.07)}
 @media(max-width:480px){.voter-form{gap:12px}.modal{padding:22px}}
+
+.eligibility-ok,.eligibility-error{padding:10px 12px;border-radius:10px;font-size:12px;font-weight:700;margin:0!important}
+.eligibility-ok{background:#e9fff2;color:#117347}
+.eligibility-error{background:#ffebee;color:#b51c35}
+.voter-submit:disabled{background:#b5bdc8;cursor:not-allowed;box-shadow:none;filter:none}
