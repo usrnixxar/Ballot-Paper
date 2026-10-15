@@ -211,3 +211,19 @@
 .celebration-share:hover{filter:brightness(1.08)}
 .celebration-actions .celebration-close{margin:0;background:#e9f0fc;color:#204e9b;box-shadow:none;border:1px solid #c5d7f6}
 .share-status{font-size:12px;color:#28775c;font-weight:700;margin:10px 0 0}
+
+/* One Nation, One Vote artwork behind Digital Ballot Paper only.
+   Asset: public/images/one-nation-one-vote.png */
+.ballot-panel{position:relative;isolation:isolate}
+.ballot-panel::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:-1;
+  pointer-events:none;
+  background:url('/images/one-nation-one-vote.png') center center / cover no-repeat;
+  opacity:.12;
+}
+.ballot-panel::after{z-index:-1}
+.ballot-panel>.ballot-heading,.ballot-panel>.paper-grid,.ballot-panel>.stamp-zone{position:relative;z-index:1}
+@media(max-width:640px){.ballot-panel::before{background-size:cover;opacity:.09}}
