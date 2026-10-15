@@ -132,3 +132,20 @@
 @keyframes livePulse{50%{box-shadow:0 0 0 7px #f9474700;opacity:.72}}
 @media(max-width:480px){.result-title-row{gap:7px}.live-indicator{font-size:9px;padding:4px 6px}.result-announcement{font-size:11px!important}}
 @media(prefers-reduced-motion:reduce){.live-dot{animation:none}}
+
+/* Keep the ballot-box / vote-count illustration below the 2027 date. */
+.hero-art .ballot-illustration{
+  width:clamp(112px,13vw,190px);
+  height:132px;
+  left:58%;
+  top:58%;
+  transform:translate(-50%,0);
+}
+.hero-art .result-title-row,.hero-art .result-announcement,.hero-art .total-count{position:relative;z-index:2}
+@media(max-width:770px){
+  .hero-art .ballot-illustration{width:135px;height:115px;left:71%;top:49%;transform:none}
+}
+@media(max-width:480px){
+  .hero-art .ballot-illustration{width:104px;height:90px;left:auto;right:8px;top:53%;transform:none}
+  .hero-art .ballot-box span{font-size:11px}
+}
