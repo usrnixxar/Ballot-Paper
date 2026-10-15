@@ -36,6 +36,8 @@ function DailyVotesChart({votes}) {
  return <div className="gender-chart daily-votes-chart"><div className="gender-chart-header"><strong>Daily Votes</strong><span>{votes.length} total votes</span></div><div className="daily-chart-scroll"><div className="daily-chart-columns">{days.length?days.map(([day,count])=><div className="daily-chart-column" key={day} title={day+': '+count+' votes'}><span>{count}</span><div className="daily-chart-bar" style={{height:Math.max(8,count/max*100)+'%',background:'#2779ed'}}/><small>{day.slice(5)}</small></div>):<p className="chart-empty">No votes yet. A new column appears for each voting day.</p>}</div></div></div>
 }
 function BallotIllustration(){return <div className="ballot-illustration" aria-hidden="true"><div className="ballot-slip"><Check size={44} strokeWidth={4}/></div><div className="box-lid"/><div className="ballot-box"><span>YOUR VOTE<br/>COUNTS</span></div></div>}
+const API_URL=(import.meta.env.VITE_API_URL||'').replace(/\/$/,'');
+async function api(path,options={}){const r=await fetch(API_URL+'/api/'+path,{credentials:'include',...options,headers:{'Content-Type':'application/json',...(options.headers||{})}});const d=await r.json().catch(()=>({}));if(!r.ok)throw Error(d.error||'Server error');return d;}
 const fmt = new Intl.NumberFormat('en-IN');
 export default function App(){
   const [candidates,setCandidates]=useState(initialCandidates);
@@ -56,9 +58,26 @@ export default function App(){
   const [voter,setVoter]=useState({name:'',dob:'',email:''});
  const [dailyVotes,setDailyVotes]=useState([]);
   const [pendingTarget,setPendingTarget]=useState(null);
+  const [verificationCode,setVerificationCode]=useState('');
+  const [formStep,setFormStep]=useState('details');
+  const [formError,setFormError]=useState('');
+  const [formBusy,setFormBusy]=useState(false);
   useEffect(()=>{musicRef.current=createAnthemPiano();return()=>{window.clearTimeout(timer.current);window.clearTimeout(resultTimer.current);musicRef.current?.dispose();}},[]);
   function startMusic(){if(muted)return;musicRef.current?.start().catch(()=>{setAudioError(true);});}
   function toggleAudio(){if(muted){setMuted(false);setAudioError(false);musicRef.current?.start().catch(()=>setAudioError(true));}else{musicRef.current?.stop();setMuted(true);}}
+  useEffect(()=>{
+    if(!API_URL)return;
+    let active=true;
+    async function refresh(){try{
+      const [rows,results]=await Promise.all([api('public/candidates'),api('public/results')]);
+      if(!active)return;
+      setCandidates(rows.map(c=>({...c,votes:results.counts[c.id]||0,imageUrl:c.imageUrl?API_URL+c.imageUrl:null})));
+      setDailyVotes(results.daily.flatMap(d=>Array.from({length:Math.min(d.count,1000)},()=>({day:d.day}))));
+    }catch(e){if(active)console.warn('Backend API unavailable',e.message);}}
+    refresh();api('visit',{method:'POST',body:'{}'}).catch(()=>{});
+    const a=setInterval(refresh,10000),b=setInterval(()=>api('visit',{method:'POST',body:'{}'}).catch(()=>{}),120000);
+    return ()=>{active=false;clearInterval(a);clearInterval(b);};
+  },[]);
   const total=useMemo(()=>candidates.reduce((sum,c)=>sum+c.votes,0),[candidates]);
   const leader=useMemo(()=>total>0?[...candidates].sort((a,b)=>b.votes-a.votes)[0]?.id:null,[candidates,total]);
   const ranking=useMemo(()=>[...candidates].sort((a,b)=>b.votes-a.votes),[candidates]);
