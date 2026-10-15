@@ -35,6 +35,7 @@ export default function App(){
   const stampRef=useRef(null);
   const [flight,setFlight]=useState(null);
   const [voteFormOpen,setVoteFormOpen]=useState(false);
+  const [celebrate,setCelebrate]=useState(false);
   const [voter,setVoter]=useState({name:'',dob:'',email:''});
   const [pendingTarget,setPendingTarget]=useState(null);
   useEffect(()=>()=>{window.clearTimeout(timer.current);window.clearTimeout(resultTimer.current)},[]);
@@ -66,9 +67,9 @@ export default function App(){
     setFlight({left:origin.left,top:origin.top,width:origin.width,height:origin.height,dx,dy});
     setPhase('stamping');
     timer.current=window.setTimeout(()=>{setPhase('marked');playStamp();},900);
-    resultTimer.current=window.setTimeout(()=>{setCandidates(prev=>prev.map(c=>c.id===id?{...c,votes:c.votes+1}:c));setPhase('voted');setFlight(null);},1650);
+    resultTimer.current=window.setTimeout(()=>{setCandidates(prev=>prev.map(c=>c.id===id?{...c,votes:c.votes+1}:c));setPhase('voted');setFlight(null);setCelebrate(true);},1650);
   }
-  function reset(){window.clearTimeout(timer.current);window.clearTimeout(resultTimer.current);setCandidates(initialCandidates);setSelected(null);setPhase('ready');setFlight(null);setConfirm(false);setVoteFormOpen(false);setPendingTarget(null);setVoter({name:'',dob:'',email:''});}
+  function reset(){window.clearTimeout(timer.current);window.clearTimeout(resultTimer.current);setCandidates(initialCandidates);setSelected(null);setPhase('ready');setFlight(null);setConfirm(false);setVoteFormOpen(false);setPendingTarget(null);setCelebrate(false);setVoter({name:'',dob:'',email:''});}
   function navigate(key){setTab(key);document.getElementById(key==='vote'?'ballot-section':key==='results'?'result-section':'page-top')?.scrollIntoView({behavior:'smooth',block:'start'});}
   return <div className="page" id="page-top">
     <header className="topbar">
@@ -89,6 +90,7 @@ export default function App(){
       <footer><ShieldCheck size={16}/> Educational frontend demo. Counts are fictional; no server, voter authentication or election security is implemented.</footer>
     </main>
     {voteFormOpen&&<div className="modal-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget){setVoteFormOpen(false);setPhase('armed');setSelected(null);setPendingTarget(null)}}}><div className="modal" role="dialog" aria-modal="true" aria-labelledby="voter-title"><button className="close" type="button" aria-label="Close voter form" onClick={()=>{setVoteFormOpen(false);setPhase('armed');setSelected(null);setPendingTarget(null)}}><X/></button><h3 id="voter-title">Voter Details</h3><p>You've selected <b>{current?.name}</b>. Enter your details to continue the demo.</p><form className="voter-form" onSubmit={submitVote}><label>Full Name<input autoFocus required type="text" autoComplete="name" maxLength={100} placeholder="Enter your name" value={voter.name} onChange={e=>setVoter(v=>({...v,name:e.target.value}))}/></label><label>Date of Birth<input required type="date" max={new Date().toLocaleDateString("en-CA")} value={voter.dob} onChange={e=>setVoter(v=>({...v,dob:e.target.value}))}/></label>{voter.dob&&<p className={isEligible?'eligibility-ok':'eligibility-error'} role="status">{voterAge===null?'Please enter a valid date of birth.':isEligible?'Eligible to vote — Age: '+voterAge:'Not eligible: You must be at least 18 years old to vote. Current age: '+voterAge}</p>}<label>Email Address<input required type="email" autoComplete="email" maxLength={254} placeholder="Enter your email" value={voter.email} onChange={e=>setVoter(v=>({...v,email:e.target.value}))}/></label><p className="modal-note">Frontend demo only: these details are not submitted to a server or permanently stored.</p><button className="voter-submit" type="submit" disabled={!isEligible}>Vote</button></form></div></div>}
+    {celebrate&&<div className="celebration-backdrop" role="presentation"><div className="confetti-scene" aria-hidden="true">{Array.from({length:48},(_,i)=><span key={i} className="confetti-piece" style={{'--i':i,'--x':((i*37)%100)+'%','--delay':((i*17)%13)*-0.14+'s','--duration':(2.5+(i%6)*.25)+'s','--hue':(i*47)%360}}/>)}</div><div className="celebration-dialog" role="dialog" aria-modal="true" aria-labelledby="celebration-title"><div className="celebration-trophy" aria-hidden="true">🎉</div><div className="celebration-check"><CheckCircle2 size={49}/></div><h2 id="celebration-title">Congratulations!</h2><p className="celebration-main">Your demo vote has been cast successfully!</p><div className="celebration-candidate">🗳️ {current?.name}</div><p className="celebration-disclaimer">This is a frontend demonstration. No real ballot was submitted.</p><button type="button" className="celebration-close" onClick={()=>setCelebrate(false)}>Continue to Results</button></div></div>}
     {tab==='help'&&<div className="modal-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget)setTab('home')}}><div className="modal" role="dialog" aria-modal="true" aria-labelledby="help-title"><button className="close" onClick={()=>setTab('home')} aria-label="Close"><X/></button><h3 id="help-title">How to use the demo</h3><p>First click the red STAMP to pick it up. Next, click one of the five ballot papers. The stamp flies onto it, prints a red Swastik and returns, while the demo result bars update.</p><p className="modal-note">Use Reset Demo to start again. This is not a real election.</p><button className="modal-done" onClick={()=>setTab('home')}>Got it</button></div></div>}
   </div>;
 }
