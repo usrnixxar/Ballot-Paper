@@ -78,8 +78,14 @@ export default function App(){
   function reset(){window.clearTimeout(timer.current);window.clearTimeout(resultTimer.current);setCandidates(initialCandidates);setDailyVotes([]);setSelected(null);setPhase('ready');setFlight(null);setConfirm(false);setVoteFormOpen(false);setPendingTarget(null);setCelebrate(false);setVoter({name:'',dob:'',email:''});}
   function navigate(key){setTab(key);document.getElementById(key==='vote'?'ballot-section':key==='results'?'result-section':'page-top')?.scrollIntoView({behavior:'smooth',block:'start'});}
   return <div className="page" id="page-top">
-    <header className="topbar">
-      <button className="brand" onClick={()=>navigate('home')}><span className="brand-icon">🗳️</span><span><strong>{election.title}</strong><small>Our Vote, Our Right • Every Voice Matters</small></span></button>
+    <header className="topbar patriotic-topbar">
+      <div className="patriotic-wash" aria-hidden="true"/>
+      <div className="flag-float" aria-label="Decorative Indian tricolor flag" role="img">
+        <span className="flag-mast"/>
+        <span className="flag-cloth"><span className="flag-orange"/><span className="flag-white"><svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="17" fill="none" stroke="#000080" strokeWidth="2.2"/><circle cx="20" cy="20" r="2.5" fill="#000080"/>{Array.from({length:24},(_,i)=><line key={i} x1="20" y1="5" x2="20" y2="18" stroke="#000080" strokeWidth="1.1" transform={'rotate('+(i*15)+' 20 20)'}/>)}</svg></span><span className="flag-green"/></span>
+      </div>
+      <button className="brand patriotic-brand" onClick={()=>navigate('home')}><span><strong>{election.title}</strong><small>Independent Ballot-Based Public Opinion Platform</small></span></button>
+      <div className="nav-election-center" aria-label="Online Election digital ballot"><span className="nav-ballot-icon" aria-hidden="true">🗳️</span><div><strong>ONLINE ELECTION</strong><small>Our Vote • Our Right • Ballot First</small></div></div>
       <nav aria-label="Main navigation"><button className={tab==='home'?'active':''} onClick={()=>navigate('home')}><Home/> Home</button><button className={tab==='results'?'active':''} onClick={()=>navigate('results')}><BarChart3/> Results</button><button className={tab==='vote'?'active':''} onClick={()=>navigate('vote')}><Vote/> Vote</button><button onClick={()=>setTab('help')} className={tab==='help'?'active':''}><CircleHelp/> Help</button></nav>
     </header>
     <main>
