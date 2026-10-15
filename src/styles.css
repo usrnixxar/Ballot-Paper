@@ -278,3 +278,8 @@
 /* Keep navbar flag video stationary; the video itself may still animate. */
 .flag-float.flag-video-container,.patriotic-topbar .flag-float.flag-video-container{animation:none!important;transform:translateY(-50%)}
 @media(max-width:770px){.flag-float.flag-video-container,.patriotic-topbar .flag-float.flag-video-container{transform:none!important}}
+
+/* Flag-free tricolor navbar. */
+.patriotic-topbar{padding-left:clamp(16px,2.3vw,38px)!important;background:linear-gradient(180deg,#ffead0 0%,#fff5e9 28%,#ffffff 47%,#f4fff3 68%,#d9f0dc 100%)!important;border-top:4px solid #ff9933;border-bottom:4px solid #138808}
+.patriotic-topbar .patriotic-wash{opacity:.45}
+@media(max-width:770px){.patriotic-topbar{padding:16px 12px!important}}
