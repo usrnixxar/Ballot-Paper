@@ -102,10 +102,7 @@ export default function App(){
   return <div className="page" id="page-top">
     <header className="topbar patriotic-topbar" onClickCapture={startMusic}>
       <div className="patriotic-wash" aria-hidden="true"/>
-      <div className="flag-float" aria-label="Decorative Indian tricolor flag" role="img">
-        <span className="flag-mast"/>
-        <span className="flag-cloth"><span className="flag-orange"/><span className="flag-white"><svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="17" fill="none" stroke="#000080" strokeWidth="2.2"/><circle cx="20" cy="20" r="2.5" fill="#000080"/>{Array.from({length:24},(_,i)=><line key={i} x1="20" y1="5" x2="20" y2="18" stroke="#000080" strokeWidth="1.1" transform={'rotate('+(i*15)+' 20 20)'}/>)}</svg></span><span className="flag-green"/></span>
-      </div>
+      <div className="flag-float flag-video-container"><video className="flag-video" src="/video/flag.mp4" autoPlay muted loop playsInline preload="metadata" aria-label="Animated Indian flag"/><span className="flag-video-fallback" aria-hidden="true">🇮🇳</span></div>
       <button className="brand patriotic-brand" onClick={()=>navigate('home')}><span><strong>{election.title}</strong><small>Independent Ballot-Based Public Opinion Platform</small></span></button>
       <div className="nav-election-center" aria-label="Online Election digital ballot"><span className="nav-ballot-icon" aria-hidden="true">🗳️</span><div><strong>ONLINE ELECTION</strong><small>Our Vote • Our Right • Ballot First</small></div></div>
       <div className="voting-started-banner"><span className="voting-started-dot" aria-hidden="true"/> Voting Started on 15 October 2026</div>
