@@ -42,6 +42,7 @@ export default function App(){
   const [phase,setPhase]=useState('ready');
   const [confirm,setConfirm]=useState(false);
   const [muted,setMuted]=useState(false);
+  const [audioError,setAudioError]=useState(false);
   const musicRef=useRef(null);
   const [tab,setTab]=useState('home');
   const timer=useRef(null);
@@ -54,7 +55,8 @@ export default function App(){
  const [dailyVotes,setDailyVotes]=useState([]);
   const [pendingTarget,setPendingTarget]=useState(null);
   useEffect(()=>{musicRef.current=createAnthemPiano();return()=>{window.clearTimeout(timer.current);window.clearTimeout(resultTimer.current);musicRef.current?.dispose();}},[]);
-  function toggleAudio(){if(muted){setMuted(false);musicRef.current?.start().catch(()=>{});}else{musicRef.current?.stop();setMuted(true);}}
+  function startMusic(){if(muted)return;musicRef.current?.start().catch(()=>{setAudioError(true);});}
+  function toggleAudio(){if(muted){setMuted(false);setAudioError(false);musicRef.current?.start().catch(()=>setAudioError(true));}else{musicRef.current?.stop();setMuted(true);}}
   const total=useMemo(()=>candidates.reduce((sum,c)=>sum+c.votes,0),[candidates]);
   const leader=useMemo(()=>total>0?[...candidates].sort((a,b)=>b.votes-a.votes)[0]?.id:null,[candidates,total]);
   const ranking=useMemo(()=>[...candidates].sort((a,b)=>b.votes-a.votes),[candidates]);
@@ -63,7 +65,7 @@ export default function App(){
   const isEligible = voterAge !== null && voterAge >= 18;
   function playStamp(){if(muted)return;try{const audioContext=new (window.AudioContext||window.webkitAudioContext)();const osc=audioContext.createOscillator();const gain=audioContext.createGain();osc.type='triangle';osc.frequency.setValueAtTime(125,audioContext.currentTime);osc.frequency.exponentialRampToValueAtTime(48,audioContext.currentTime+.17);gain.gain.setValueAtTime(.14,audioContext.currentTime);gain.gain.exponentialRampToValueAtTime(.001,audioContext.currentTime+.2);osc.connect(gain);gain.connect(audioContext.destination);osc.start();osc.stop(audioContext.currentTime+.21);osc.onended=()=>audioContext.close();}catch{/* audio not available */}}
   function pickStamp(){
-    if(phase==='ready'){setPhase('form');setVoteFormOpen(true);if(!muted)musicRef.current?.start().catch(()=>{});}
+    if(phase==='ready'){setPhase('form');setVoteFormOpen(true);startMusic();}
     else if(phase==='verified')setPhase('armed');
     else if(phase==='armed')setPhase('verified');
   }
@@ -87,7 +89,7 @@ export default function App(){
   function reset(){window.clearTimeout(timer.current);window.clearTimeout(resultTimer.current);setCandidates(initialCandidates);setDailyVotes([]);setSelected(null);setPhase('ready');setFlight(null);setConfirm(false);setVoteFormOpen(false);setPendingTarget(null);setCelebrate(false);setVoter({name:'',dob:'',email:''});}
   function navigate(key){setTab(key);document.getElementById(key==='vote'?'ballot-section':key==='results'?'result-section':'page-top')?.scrollIntoView({behavior:'smooth',block:'start'});}
   return <div className="page" id="page-top">
-    <header className="topbar patriotic-topbar">
+    <header className="topbar patriotic-topbar" onClickCapture={startMusic}>
       <div className="patriotic-wash" aria-hidden="true"/>
       <div className="flag-float" aria-label="Decorative Indian tricolor flag" role="img">
         <span className="flag-mast"/>
@@ -98,7 +100,7 @@ export default function App(){
       <div className="voting-started-banner"><span className="voting-started-dot" aria-hidden="true"/> Voting Started on 15 October 2026</div>
       <nav aria-label="Main navigation"><button className={tab==='home'?'active':''} onClick={()=>navigate('home')}><Home/> Home</button><button className={tab==='results'?'active':''} onClick={()=>navigate('results')}><BarChart3/> Results</button><button className={tab==='vote'?'active':''} onClick={()=>navigate('vote')}><Vote/> Vote</button><button onClick={()=>setTab('help')} className={tab==='help'?'active':''}><CircleHelp/> Help</button></nav>
     </header>
-    <main>
+    <main onClickCapture={startMusic}>
       <section className="results-panel" id="result-section" aria-label="Demo election results">
         <div className="results-main"><div className="results-hero"><div className="hero-art"><div className="sparkles">✦ &nbsp; ✧ &nbsp; ✦</div><div className="result-title-row"><h1>Election <span>Result</span></h1><span className="live-indicator"><span className="live-dot"/> LIVE</span></div><p>Total Votes Cast</p><p className="result-announcement">Result on 1 January 2027</p><div className="total-count" aria-live="polite">{fmt.format(total)}</div><BallotIllustration/><div className="motto"><BarChart3/><div><b>Our Vote. Our Voice. Our Right.</b><small>Independent voices deserve to be heard.</small></div></div></div></div>
         <div className="leaderboard">{ranking.map((c,i)=><div className={'result-row '+(c.id===leader?'is-leading':'')} key={c.id} style={{'--candidate-color':c.color,'--delay':(i*80)+'ms'}}><span className="rank">{i+1}</span><span className="result-symbol"><CandidateImage candidate={c}/></span><span className="candidate-result-name">{c.name}</span><span className="votes"><strong>{fmt.format(c.votes)}</strong> votes</span><span className="percentage">{(total>0?c.votes/total*100:0).toFixed(1)}%</span><div className="bar-track"><div className="bar-fill" style={{width:(total>0?c.votes/total*100:0)+'%'}}/></div>{c.id===leader&&<span className="leading"><Crown/> <span>Leading</span></span>}</div>)}</div></div>
@@ -107,7 +109,7 @@ export default function App(){
       <section className="ballot-panel" id="ballot-section" aria-label="Digital ballot paper">
         <div className="ballot-heading"><div><h2><span className="heading-emoji">🗳️</span> Digital Ballot Paper</h2><p>Click the stamp to register, fill your details, then pick up the stamp again and choose a ballot paper.</p></div><div className="security"><Info size={18}/> Simulation only — no real vote stored</div></div>
         <div className="paper-grid">{candidates.map((c)=><button type="button" key={c.id} style={{'--candidate-color':c.color}} className={'paper '+(selected===c.id?'selected ':'')+(selected===c.id&&(phase==='marked'||phase==='voted')?'printed ':'')+(phase==='armed'?'targetable ':'')+((phase==='stamping'||phase==='marked'||phase==='voted')&&selected!==c.id?'dimmed':'')} onClick={e=>stampPaper(c.id,e)} disabled={phase!=='armed'} aria-label={phase==='armed'?'Choose '+c.name+' to open voter form':c.name}><span className="paper-name">{c.name}</span><span className="paper-image-area"><CandidateImage candidate={c} className="paper-symbol"/></span>{selected===c.id&&(phase==='marked'||phase==='voted')&&<div className="ink-overlay"><SwastikPrint/></div>}</button>)}</div>
-        <div className="stamp-zone"><button ref={stampRef} className={'stamp '+(phase==='armed'?'picked ':'')+(flight?'stamp-source-hidden':'')} onClick={pickStamp} disabled={!['ready','verified','armed'].includes(phase)} aria-pressed={phase==='armed'} aria-label={phase==='ready'?'Open voter registration':phase==='armed'?'Put stamp down':'Pick up stamp'}><span className="stamp-handle"/><span className="stamp-neck"/><span className="stamp-base">STAMP</span></button><p>{phase==='ready'?'Step 1: Click the stamp to open voter details':phase==='form'?'Fill your details — the stamp stays in place':phase==='verified'?'Step 2: Click the stamp again to pick it up':phase==='armed'?'Step 3: Click a ballot paper to stamp your vote':phase==='stamping'?'Stamp moving to your ballot…':phase==='marked'?'Swastik printed! Stamp returning…':'Your demo vote has been cast successfully!'}</p>{phase==='voted'&&<div className="success"><CheckCircle2 size={19}/> Demo vote recorded in this page only</div>}<div className="utility"><button onClick={reset}><RotateCcw size={15}/> Reset Demo</button><button onClick={toggleAudio}>{muted?<VolumeX size={15}/>:<Volume2 size={15}/>} {muted?'Play Piano Music':'Mute Music'}</button></div></div>
+        <div className="stamp-zone"><button ref={stampRef} className={'stamp '+(phase==='armed'?'picked ':'')+(flight?'stamp-source-hidden':'')} onClick={pickStamp} disabled={!['ready','verified','armed'].includes(phase)} aria-pressed={phase==='armed'} aria-label={phase==='ready'?'Open voter registration':phase==='armed'?'Put stamp down':'Pick up stamp'}><span className="stamp-handle"/><span className="stamp-neck"/><span className="stamp-base">STAMP</span></button><p>{phase==='ready'?'Step 1: Click the stamp to open voter details':phase==='form'?'Fill your details — the stamp stays in place':phase==='verified'?'Step 2: Click the stamp again to pick it up':phase==='armed'?'Step 3: Click a ballot paper to stamp your vote':phase==='stamping'?'Stamp moving to your ballot…':phase==='marked'?'Swastik printed! Stamp returning…':'Your demo vote has been cast successfully!'}</p>{phase==='voted'&&<div className="success"><CheckCircle2 size={19}/> Demo vote recorded in this page only</div>}{audioError&&<p className="audio-error">Audio was blocked. Tap Play Piano Music to try again.</p>}<div className="utility"><button onClick={reset}><RotateCcw size={15}/> Reset Demo</button><button onClick={toggleAudio}>{muted?<VolumeX size={15}/>:<Volume2 size={15}/>} {muted?'Play Piano Music':'Mute Music'}</button></div></div>
         {flight&&<div className="flying-stamp" aria-hidden="true" style={{left:flight.left,top:flight.top,width:flight.width,height:flight.height,'--flight-x':flight.dx+'px','--flight-y':flight.dy+'px'}}><div className="stamp-handle"/><div className="stamp-neck"/><div className="stamp-base">STAMP</div></div>}
       </section>
       <footer className="civic-footer"><div className="civic-footer-slogan">Your Voice Matters • Every Vote Counts • Choose Freely</div><div className="civic-footer-disclaimer"><ShieldCheck size={16}/> Independent, unofficial public opinion voting demo. Not affiliated with the Election Commission of India, any government body, or an official election. Results are simulated and are not official election results.</div><div className="civic-footer-note">Vote responsibly. Respect different opinions. Participation here does not replace voting in any official election.</div></footer>
