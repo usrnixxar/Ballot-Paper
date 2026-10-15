@@ -63,7 +63,7 @@ export default function App(){
   const isEligible = voterAge !== null && voterAge >= 18;
   function playStamp(){if(muted)return;try{const audioContext=new (window.AudioContext||window.webkitAudioContext)();const osc=audioContext.createOscillator();const gain=audioContext.createGain();osc.type='triangle';osc.frequency.setValueAtTime(125,audioContext.currentTime);osc.frequency.exponentialRampToValueAtTime(48,audioContext.currentTime+.17);gain.gain.setValueAtTime(.14,audioContext.currentTime);gain.gain.exponentialRampToValueAtTime(.001,audioContext.currentTime+.2);osc.connect(gain);gain.connect(audioContext.destination);osc.start();osc.stop(audioContext.currentTime+.21);osc.onended=()=>audioContext.close();}catch{/* audio not available */}}
   function pickStamp(){
-    if(phase==='ready'){setPhase('form');setVoteFormOpen(true);}
+    if(phase==='ready'){setPhase('form');setVoteFormOpen(true);if(muted)musicRef.current?.start().then(()=>setMuted(false)).catch(()=>{});}
     else if(phase==='verified')setPhase('armed');
     else if(phase==='armed')setPhase('verified');
   }
