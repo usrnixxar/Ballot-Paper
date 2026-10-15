@@ -28,3 +28,21 @@
 .eligibility-ok{background:#e9fff2;color:#117347}
 .eligibility-error{background:#ffebee;color:#b51c35}
 .voter-submit:disabled{background:#b5bdc8;cursor:not-allowed;box-shadow:none;filter:none}
+
+/* Celebration appears only after a completed demo stamp-and-vote animation */
+.celebration-backdrop{position:fixed;inset:0;z-index:100;background:rgba(8,24,65,.69);backdrop-filter:blur(7px);display:grid;place-items:center;padding:18px;overflow:hidden}
+.celebration-dialog{position:relative;z-index:2;text-align:center;background:linear-gradient(160deg,#fff,#f3faff);border:2px solid #fff;border-radius:27px;padding:34px 28px 29px;box-shadow:0 28px 80px #020e3d8a;width:min(460px,100%);animation:celebrationPop .6s cubic-bezier(.2,1.5,.4,1) both}
+.celebration-trophy{font-size:64px;animation:partyWiggle 1.3s ease-in-out infinite alternate}
+.celebration-check{display:grid;place-items:center;color:#18b97c;margin:2px auto 10px;animation:celebrationPop .6s .25s both}
+.celebration-dialog h2{margin:0;font-size:clamp(27px,5vw,36px);font-weight:900;letter-spacing:-1px;color:#132d64}
+.celebration-main{font-size:16px;line-height:1.5;color:#23446b;font-weight:700}
+.celebration-candidate{display:inline-block;border-radius:40px;background:#e2f7ed;color:#087448;font-weight:800;padding:12px 22px;margin:6px 0}
+.celebration-disclaimer{font-size:11px;color:#748299;line-height:1.6;margin:14px auto 18px}
+.celebration-close{border:none;background:linear-gradient(120deg,#1675ea,#415cef);padding:14px 24px;width:100%;border-radius:14px;font-size:15px;font-weight:800;color:white;box-shadow:0 7px 20px #356fe544}
+.celebration-close:hover{filter:brightness(1.08)}
+.confetti-scene{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.confetti-piece{position:absolute;top:-12%;left:var(--x);height:15px;width:9px;border-radius:2px;background:hsl(var(--hue),85%,58%);animation:confettiFall var(--duration) linear var(--delay) infinite}
+@keyframes confettiFall{0%{transform:translate3d(0,-20px,0) rotate(0);opacity:1}100%{transform:translate3d(115px,120vh,0) rotate(850deg);opacity:.75}}
+@keyframes celebrationPop{from{opacity:0;transform:translateY(45px) scale(.68)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes partyWiggle{from{transform:rotate(-8deg) scale(.95)}to{transform:rotate(8deg) scale(1.08)}}
+@media(prefers-reduced-motion:reduce){.confetti-piece,.celebration-trophy{animation:none!important}.confetti-piece{display:none}}
