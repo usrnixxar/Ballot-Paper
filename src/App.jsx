@@ -20,14 +20,28 @@ export default function App(){
   const [muted,setMuted]=useState(true);
   const [tab,setTab]=useState('home');
   const timer=useRef(null);
-  useEffect(()=>()=>window.clearTimeout(timer.current),[]);
+  const resultTimer=useRef(null);
+  const stampRef=useRef(null);
+  const [flight,setFlight]=useState(null);
+  useEffect(()=>()=>{window.clearTimeout(timer.current);window.clearTimeout(resultTimer.current)},[]);
   const total=useMemo(()=>candidates.reduce((sum,c)=>sum+c.votes,0),[candidates]);
   const leader=useMemo(()=>[...candidates].sort((a,b)=>b.votes-a.votes)[0]?.id,[candidates]);
   const ranking=useMemo(()=>[...candidates].sort((a,b)=>b.votes-a.votes),[candidates]);
   const current=candidates.find(c=>c.id===selected);
   function playStamp(){if(muted)return;try{const audioContext=new (window.AudioContext||window.webkitAudioContext)();const osc=audioContext.createOscillator();const gain=audioContext.createGain();osc.type='triangle';osc.frequency.setValueAtTime(125,audioContext.currentTime);osc.frequency.exponentialRampToValueAtTime(48,audioContext.currentTime+.17);gain.gain.setValueAtTime(.14,audioContext.currentTime);gain.gain.exponentialRampToValueAtTime(.001,audioContext.currentTime+.2);osc.connect(gain);gain.connect(audioContext.destination);osc.start();osc.stop(audioContext.currentTime+.21);osc.onended=()=>audioContext.close();}catch{/* audio not available */}}
-  function castVote(){if(!selected||phase!=='ready')return;setConfirm(false);setPhase('stamping');playStamp();timer.current=window.setTimeout(()=>{setCandidates(prev=>prev.map(c=>c.id===selected?{...c,votes:c.votes+1}:c));setPhase('voted');},900);}
-  function reset(){window.clearTimeout(timer.current);setCandidates(initialCandidates);setSelected(null);setPhase('ready');setConfirm(false);}
+  function pickStamp(){if(phase==='ready')setPhase('armed');else if(phase==='armed')setPhase('ready');}
+  function stampPaper(id,event){
+    if(phase!=='armed')return;
+    const origin=stampRef.current?.getBoundingClientRect();
+    const target=event.currentTarget.getBoundingClientRect();
+    if(!origin)return;
+    setSelected(id);
+    setFlight({left:origin.left,top:origin.top,width:origin.width,height:origin.height,dx:target.left+target.width/2-origin.left-origin.width/2,dy:target.top+target.height/2-origin.top-origin.height/2});
+    setPhase('stamping');
+    timer.current=window.setTimeout(()=>{setPhase('marked');playStamp();},700);
+    resultTimer.current=window.setTimeout(()=>{setCandidates(prev=>prev.map(c=>c.id===id?{...c,votes:c.votes+1}:c));setPhase('voted');setFlight(null);},1650);
+  }
+  function reset(){window.clearTimeout(timer.current);window.clearTimeout(resultTimer.current);setCandidates(initialCandidates);setSelected(null);setPhase('ready');setFlight(null);setConfirm(false);}
   function navigate(key){setTab(key);document.getElementById(key==='vote'?'ballot-section':key==='results'?'result-section':'page-top')?.scrollIntoView({behavior:'smooth',block:'start'});}
   return <div className="page" id="page-top">
     <header className="topbar">
@@ -40,13 +54,13 @@ export default function App(){
         <div className="leaderboard">{ranking.map((c,i)=><div className={'result-row '+(c.id===leader?'is-leading':'')} key={c.id} style={{'--candidate-color':c.color,'--delay':(i*80)+'ms'}}><span className="rank">{i+1}</span><span className="result-symbol"><Symbol type={c.symbol}/></span><span className="candidate-result-name">{c.name}</span><span className="votes"><strong>{fmt.format(c.votes)}</strong> votes</span><span className="percentage">{(c.votes/total*100).toFixed(1)}%</span><div className="bar-track"><div className="bar-fill" style={{width:(c.votes/total*100)+'%'}}/></div>{c.id===leader&&<span className="leading"><Crown/> <span>Leading</span></span>}</div>)}</div>
       </section>
       <section className="ballot-panel" id="ballot-section" aria-label="Digital ballot paper">
-        <div className="ballot-heading"><div><h2><span className="heading-emoji">🗳️</span> Digital Ballot Paper</h2><p>Select a candidate and click on the stamp to cast your demo vote.</p></div><div className="security"><Info size={18}/> Simulation only — no real vote stored</div></div>
-        <div className="paper-grid">{candidates.map((c)=><button type="button" key={c.id} style={{'--candidate-color':c.color}} className={'paper '+(selected===c.id?'selected ':'')+(selected===c.id&&(phase==='stamping'||phase==='voted')?'printed ':'')+(phase!=='ready'&&selected!==c.id?'dimmed':'')} onClick={()=>{if(phase==='ready')setSelected(c.id)}} disabled={phase!=='ready'} aria-pressed={selected===c.id}><span className="paper-name">{c.name}</span><Symbol type={c.symbol} className="paper-symbol"/><span className="ballot-circle">{selected===c.id&&phase==='ready'&&<span/>}</span>{selected===c.id&&(phase==='stamping'||phase==='voted')&&<div className="ink-overlay"><SwastikPrint/></div>}</button>)}</div>
-        <div className="stamp-zone"><button className={'stamp '+(phase==='stamping'?'impact':'')} onClick={()=>setConfirm(true)} disabled={!selected||phase!=='ready'} aria-label="Stamp selected ballot to vote"><span className="stamp-handle"/><span className="stamp-neck"/><span className="stamp-base">VOTE</span></button><p>{phase==='ready'?(selected?'Ready to stamp '+current.name:'Select a ballot paper, then click the stamp'):phase==='stamping'?'Stamping your selected ballot…':'Your demo vote has been cast successfully!'}</p>{phase==='voted'&&<div className="success"><CheckCircle2 size={19}/> Demo vote recorded in this page only</div>}<div className="utility"><button onClick={reset}><RotateCcw size={15}/> Reset Demo</button><button onClick={()=>setMuted(m=>!m)}>{muted?<VolumeX size={15}/>:<Volume2 size={15}/>} {muted?'Unmute':'Mute'}</button></div></div>
+        <div className="ballot-heading"><div><h2><span className="heading-emoji">🗳️</span> Digital Ballot Paper</h2><p>Pick up the stamp first, then click a ballot paper to stamp your vote.</p></div><div className="security"><Info size={18}/> Simulation only — no real vote stored</div></div>
+        <div className="paper-grid">{candidates.map((c)=><button type="button" key={c.id} style={{'--candidate-color':c.color}} className={'paper '+(selected===c.id?'selected ':'')+(selected===c.id&&(phase==='marked'||phase==='voted')?'printed ':'')+(phase==='armed'?'targetable ':'')+((phase==='stamping'||phase==='marked'||phase==='voted')&&selected!==c.id?'dimmed':'')} onClick={e=>stampPaper(c.id,e)} disabled={phase!=='armed'} aria-label={phase==='armed'?'Stamp '+c.name:c.name}><span className="paper-name">{c.name}</span><Symbol type={c.symbol} className="paper-symbol"/><span className="ballot-circle"/>{selected===c.id&&(phase==='marked'||phase==='voted')&&<div className="ink-overlay"><SwastikPrint/></div>}</button>)}</div>
+        <div className="stamp-zone"><button ref={stampRef} className={'stamp '+(phase==='armed'?'picked ':'')+(flight?'stamp-source-hidden':'')} onClick={pickStamp} disabled={!['ready','armed'].includes(phase)} aria-pressed={phase==='armed'} aria-label={phase==='armed'?'Put stamp down':'Pick up stamp'}><span className="stamp-handle"/><span className="stamp-neck"/><span className="stamp-base">STAMP</span></button><p>{phase==='ready'?'Step 1: Click the stamp to pick it up':phase==='armed'?'Step 2: Stamp picked up! Click the ballot paper you want to vote for':phase==='stamping'?'Stamp moving to your ballot…':phase==='marked'?'Swastik printed! Stamp returning…':'Your demo vote has been cast successfully!'}</p>{phase==='voted'&&<div className="success"><CheckCircle2 size={19}/> Demo vote recorded in this page only</div>}<div className="utility"><button onClick={reset}><RotateCcw size={15}/> Reset Demo</button><button onClick={()=>setMuted(m=>!m)}>{muted?<VolumeX size={15}/>:<Volume2 size={15}/>} {muted?'Unmute':'Mute'}</button></div></div>
+        {flight&&<div className="flying-stamp" aria-hidden="true" style={{left:flight.left,top:flight.top,width:flight.width,height:flight.height,'--flight-x':flight.dx+'px','--flight-y':flight.dy+'px'}}><div className="stamp-handle"/><div className="stamp-neck"/><div className="stamp-base">STAMP</div></div>}
       </section>
       <footer><ShieldCheck size={16}/> Educational frontend demo. Counts are fictional; no server, voter authentication or election security is implemented.</footer>
     </main>
-    {confirm&&<div className="modal-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget)setConfirm(false)}}><div className="modal" role="dialog" aria-modal="true" aria-labelledby="confirm-title"><button className="close" aria-label="Close" onClick={()=>setConfirm(false)}><X/></button><h3 id="confirm-title">Confirm your demo vote</h3><p>Apply the traditional red Swastik stamp to <b>{current?.name}</b>?</p><p className="modal-note">This only updates sample results in your browser.</p><div className="modal-actions"><button onClick={()=>setConfirm(false)}>Cancel</button><button onClick={castVote}>Confirm & Stamp</button></div></div></div>}
     {tab==='help'&&<div className="modal-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget)setTab('home')}}><div className="modal" role="dialog" aria-modal="true" aria-labelledby="help-title"><button className="close" onClick={()=>setTab('home')} aria-label="Close"><X/></button><h3 id="help-title">How to use the demo</h3><p>Choose one of the five ballot papers. Press the red VOTE stamp, confirm, and watch the ink impression and result bars animate.</p><p className="modal-note">Use Reset Demo to start again. This is not a real election.</p><button className="modal-done" onClick={()=>setTab('home')}>Got it</button></div></div>}
   </div>;
 }
