@@ -182,3 +182,14 @@
 @media(max-width:1150px){.patriotic-topbar{grid-template-columns:1fr auto;padding-left:100px;row-gap:12px}.patriotic-topbar nav{grid-column:1/-1;justify-content:center}.nav-election-center{justify-self:end}}
 @media(max-width:640px){.patriotic-topbar{padding:12px 12px 12px 70px;grid-template-columns:minmax(0,1fr);gap:9px}.flag-float{left:8px;top:54px}.flag-mast{height:57px}.flag-cloth{width:46px;height:32px}.flag-white svg{height:12px;width:12px}.patriotic-brand strong{font-size:21px}.patriotic-brand small{font-size:10px}.nav-election-center{justify-self:stretch;justify-content:flex-start;padding:7px 10px;gap:9px}.nav-ballot-icon{font-size:24px}.nav-election-center strong{font-size:12px}.nav-election-center small{font-size:9px}.patriotic-topbar nav{grid-column:1;justify-content:space-between;gap:2px}.patriotic-topbar nav button{padding:8px 5px;font-size:10px;gap:3px}.patriotic-topbar nav svg{width:15px;height:15px}}
 @media(prefers-reduced-motion:reduce){.flag-float,.flag-cloth{animation:none!important}}
+
+/* Candidate images: no bottom checkbox/circle; uploaded PNG sits centered. */
+.paper{justify-content:flex-start;gap:8px}
+.paper-name{flex:none}
+.paper-image-area{display:flex;align-items:center;justify-content:center;flex:1;min-height:125px;width:100%;padding:10px}
+.paper-image-area .paper-symbol{display:block;max-width:100%;width:min(100%,150px);height:125px;object-fit:contain;object-position:center}
+.result-symbol{display:flex;align-items:center;justify-content:center;min-width:0}
+.result-symbol img,.result-symbol svg{width:43px;height:43px;max-width:100%;object-fit:contain;object-position:center}
+.paper .ballot-circle{display:none!important}
+@media(max-width:770px){.paper-image-area{min-height:115px}.paper-image-area .paper-symbol{height:115px}}
+@media(max-width:480px){.result-symbol img,.result-symbol svg{width:27px;height:27px}.paper-image-area .paper-symbol{height:105px}}
