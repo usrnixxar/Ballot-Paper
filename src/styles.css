@@ -122,3 +122,13 @@
 .daily-votes-chart{width:100%;min-height:135px}
 .daily-votes-chart .daily-chart-columns{gap:16px}
 @media(max-width:460px){.result-analytics{grid-template-columns:minmax(0,1fr)!important}}
+
+/* Election result date and live indicator */
+.result-title-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;position:relative;z-index:2}
+.result-title-row h1{margin-bottom:4px}
+.live-indicator{display:inline-flex;align-items:center;gap:6px;color:#d21c2b;font-size:11px;font-weight:900;letter-spacing:.8px;padding:5px 9px;background:#fff5f5;border:1px solid #ffd5d8;border-radius:18px;white-space:nowrap}
+.live-dot{width:9px;height:9px;border-radius:50%;background:#ec102e;box-shadow:0 0 0 3px #f9474730;animation:livePulse 1.5s infinite}
+.result-announcement{color:#b52f3c!important;font-size:13px!important;font-weight:800!important;margin:4px 0!important}
+@keyframes livePulse{50%{box-shadow:0 0 0 7px #f9474700;opacity:.72}}
+@media(max-width:480px){.result-title-row{gap:7px}.live-indicator{font-size:9px;padding:4px 6px}.result-announcement{font-size:11px!important}}
+@media(prefers-reduced-motion:reduce){.live-dot{animation:none}}
