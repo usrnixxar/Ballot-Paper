@@ -41,7 +41,7 @@ export default function App(){
   const [selected,setSelected]=useState(null);
   const [phase,setPhase]=useState('ready');
   const [confirm,setConfirm]=useState(false);
-  const [muted,setMuted]=useState(true);
+  const [muted,setMuted]=useState(false);
   const musicRef=useRef(null);
   const [tab,setTab]=useState('home');
   const timer=useRef(null);
@@ -54,7 +54,7 @@ export default function App(){
  const [dailyVotes,setDailyVotes]=useState([]);
   const [pendingTarget,setPendingTarget]=useState(null);
   useEffect(()=>{musicRef.current=createAnthemPiano();return()=>{window.clearTimeout(timer.current);window.clearTimeout(resultTimer.current);musicRef.current?.dispose();}},[]);
-  function toggleAudio(){if(muted){musicRef.current?.start().then(()=>setMuted(false)).catch(()=>setMuted(true));}else{musicRef.current?.stop();setMuted(true);}}
+  function toggleAudio(){if(muted){setMuted(false);musicRef.current?.start().catch(()=>{});}else{musicRef.current?.stop();setMuted(true);}}
   const total=useMemo(()=>candidates.reduce((sum,c)=>sum+c.votes,0),[candidates]);
   const leader=useMemo(()=>total>0?[...candidates].sort((a,b)=>b.votes-a.votes)[0]?.id:null,[candidates,total]);
   const ranking=useMemo(()=>[...candidates].sort((a,b)=>b.votes-a.votes),[candidates]);
@@ -63,7 +63,7 @@ export default function App(){
   const isEligible = voterAge !== null && voterAge >= 18;
   function playStamp(){if(muted)return;try{const audioContext=new (window.AudioContext||window.webkitAudioContext)();const osc=audioContext.createOscillator();const gain=audioContext.createGain();osc.type='triangle';osc.frequency.setValueAtTime(125,audioContext.currentTime);osc.frequency.exponentialRampToValueAtTime(48,audioContext.currentTime+.17);gain.gain.setValueAtTime(.14,audioContext.currentTime);gain.gain.exponentialRampToValueAtTime(.001,audioContext.currentTime+.2);osc.connect(gain);gain.connect(audioContext.destination);osc.start();osc.stop(audioContext.currentTime+.21);osc.onended=()=>audioContext.close();}catch{/* audio not available */}}
   function pickStamp(){
-    if(phase==='ready'){setPhase('form');setVoteFormOpen(true);if(muted)musicRef.current?.start().then(()=>setMuted(false)).catch(()=>{});}
+    if(phase==='ready'){setPhase('form');setVoteFormOpen(true);if(!muted)musicRef.current?.start().catch(()=>{});}
     else if(phase==='verified')setPhase('armed');
     else if(phase==='armed')setPhase('verified');
   }
