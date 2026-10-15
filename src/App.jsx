@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { BarChart3, Check, CheckCircle2, CircleHelp, Crown, Home, Info, RotateCcw, ShieldCheck, Volume2, VolumeX, Vote, X } from 'lucide-react';
 import { election, initialCandidates } from './data';
+import { createAnthemPiano } from './music';
 
 function Symbol({ type, className = '' }) {
   if (type === 'star') return <svg className={className} viewBox="0 0 100 100" aria-hidden="true"><path fill="currentColor" d="M50 4 62 35 96 37 70 58 79 92 50 73 21 92 30 58 4 37 38 35Z"/></svg>;
@@ -41,6 +42,7 @@ export default function App(){
   const [phase,setPhase]=useState('ready');
   const [confirm,setConfirm]=useState(false);
   const [muted,setMuted]=useState(true);
+  const musicRef=useRef(null);
   const [tab,setTab]=useState('home');
   const timer=useRef(null);
   const resultTimer=useRef(null);
@@ -51,7 +53,8 @@ export default function App(){
   const [voter,setVoter]=useState({name:'',dob:'',email:''});
  const [dailyVotes,setDailyVotes]=useState([]);
   const [pendingTarget,setPendingTarget]=useState(null);
-  useEffect(()=>()=>{window.clearTimeout(timer.current);window.clearTimeout(resultTimer.current)},[]);
+  useEffect(()=>{musicRef.current=createAnthemPiano();return()=>{window.clearTimeout(timer.current);window.clearTimeout(resultTimer.current);musicRef.current?.dispose();}},[]);
+  function toggleAudio(){if(muted){musicRef.current?.start().then(()=>setMuted(false)).catch(()=>setMuted(true));}else{musicRef.current?.stop();setMuted(true);}}
   const total=useMemo(()=>candidates.reduce((sum,c)=>sum+c.votes,0),[candidates]);
   const leader=useMemo(()=>total>0?[...candidates].sort((a,b)=>b.votes-a.votes)[0]?.id:null,[candidates,total]);
   const ranking=useMemo(()=>[...candidates].sort((a,b)=>b.votes-a.votes),[candidates]);
@@ -104,7 +107,7 @@ export default function App(){
       <section className="ballot-panel" id="ballot-section" aria-label="Digital ballot paper">
         <div className="ballot-heading"><div><h2><span className="heading-emoji">🗳️</span> Digital Ballot Paper</h2><p>Click the stamp to register, fill your details, then pick up the stamp again and choose a ballot paper.</p></div><div className="security"><Info size={18}/> Simulation only — no real vote stored</div></div>
         <div className="paper-grid">{candidates.map((c)=><button type="button" key={c.id} style={{'--candidate-color':c.color}} className={'paper '+(selected===c.id?'selected ':'')+(selected===c.id&&(phase==='marked'||phase==='voted')?'printed ':'')+(phase==='armed'?'targetable ':'')+((phase==='stamping'||phase==='marked'||phase==='voted')&&selected!==c.id?'dimmed':'')} onClick={e=>stampPaper(c.id,e)} disabled={phase!=='armed'} aria-label={phase==='armed'?'Choose '+c.name+' to open voter form':c.name}><span className="paper-name">{c.name}</span><span className="paper-image-area"><CandidateImage candidate={c} className="paper-symbol"/></span>{selected===c.id&&(phase==='marked'||phase==='voted')&&<div className="ink-overlay"><SwastikPrint/></div>}</button>)}</div>
-        <div className="stamp-zone"><button ref={stampRef} className={'stamp '+(phase==='armed'?'picked ':'')+(flight?'stamp-source-hidden':'')} onClick={pickStamp} disabled={!['ready','verified','armed'].includes(phase)} aria-pressed={phase==='armed'} aria-label={phase==='ready'?'Open voter registration':phase==='armed'?'Put stamp down':'Pick up stamp'}><span className="stamp-handle"/><span className="stamp-neck"/><span className="stamp-base">STAMP</span></button><p>{phase==='ready'?'Step 1: Click the stamp to open voter details':phase==='form'?'Fill your details — the stamp stays in place':phase==='verified'?'Step 2: Click the stamp again to pick it up':phase==='armed'?'Step 3: Click a ballot paper to stamp your vote':phase==='stamping'?'Stamp moving to your ballot…':phase==='marked'?'Swastik printed! Stamp returning…':'Your demo vote has been cast successfully!'}</p>{phase==='voted'&&<div className="success"><CheckCircle2 size={19}/> Demo vote recorded in this page only</div>}<div className="utility"><button onClick={reset}><RotateCcw size={15}/> Reset Demo</button><button onClick={()=>setMuted(m=>!m)}>{muted?<VolumeX size={15}/>:<Volume2 size={15}/>} {muted?'Unmute':'Mute'}</button></div></div>
+        <div className="stamp-zone"><button ref={stampRef} className={'stamp '+(phase==='armed'?'picked ':'')+(flight?'stamp-source-hidden':'')} onClick={pickStamp} disabled={!['ready','verified','armed'].includes(phase)} aria-pressed={phase==='armed'} aria-label={phase==='ready'?'Open voter registration':phase==='armed'?'Put stamp down':'Pick up stamp'}><span className="stamp-handle"/><span className="stamp-neck"/><span className="stamp-base">STAMP</span></button><p>{phase==='ready'?'Step 1: Click the stamp to open voter details':phase==='form'?'Fill your details — the stamp stays in place':phase==='verified'?'Step 2: Click the stamp again to pick it up':phase==='armed'?'Step 3: Click a ballot paper to stamp your vote':phase==='stamping'?'Stamp moving to your ballot…':phase==='marked'?'Swastik printed! Stamp returning…':'Your demo vote has been cast successfully!'}</p>{phase==='voted'&&<div className="success"><CheckCircle2 size={19}/> Demo vote recorded in this page only</div>}<div className="utility"><button onClick={reset}><RotateCcw size={15}/> Reset Demo</button><button onClick={toggleAudio}>{muted?<VolumeX size={15}/>:<Volume2 size={15}/>} {muted?'Play Piano Music':'Mute Music'}</button></div></div>
         {flight&&<div className="flying-stamp" aria-hidden="true" style={{left:flight.left,top:flight.top,width:flight.width,height:flight.height,'--flight-x':flight.dx+'px','--flight-y':flight.dy+'px'}}><div className="stamp-handle"/><div className="stamp-neck"/><div className="stamp-base">STAMP</div></div>}
       </section>
       <footer className="civic-footer"><div className="civic-footer-slogan">Your Voice Matters • Every Vote Counts • Choose Freely</div><div className="civic-footer-disclaimer"><ShieldCheck size={16}/> Independent, unofficial public opinion voting demo. Not affiliated with the Election Commission of India, any government body, or an official election. Results are simulated and are not official election results.</div><div className="civic-footer-note">Vote responsibly. Respect different opinions. Participation here does not replace voting in any official election.</div></footer>
