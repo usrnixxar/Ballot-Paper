@@ -95,3 +95,24 @@
 /* Keep stamped impression and paper selection visible with paper-cut outlines. */
 .paper.selected{outline:1px solid #ef475a;outline-offset:-4px}
 @media(max-width:770px){.paper{border-radius:2px!important}}
+
+/* Election results 80% top, daily demographic analytics 20% bottom. */
+.results-panel{display:flex!important;flex-direction:column;gap:10px;min-height:540px;overflow:visible}
+.results-main{display:grid;grid-template-columns:32% minmax(0,68%);height:80%;min-height:340px;flex:4;gap:8px;min-width:0}
+.results-hero{min-width:0}.leaderboard{min-width:0}
+.result-analytics{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;height:20%;min-height:130px;flex:1;min-width:0}
+.gender-chart{min-width:0;min-height:0;background:#fffef7;border:1px solid #dfd8c7;padding:9px 12px;clip-path:var(--paper-cut);display:flex;flex-direction:column}
+.gender-chart-header{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:12px}
+.gender-chart-header span{color:#697b96;font-size:11px;white-space:nowrap}
+.daily-chart-scroll{overflow-x:auto;overflow-y:hidden;flex:1;min-height:85px;scrollbar-width:thin}
+.daily-chart-columns{height:100%;display:flex;align-items:flex-end;gap:10px;min-width:100%;width:max-content;padding:8px 4px 0}
+.daily-chart-column{min-width:32px;width:32px;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:3px;font-size:10px;font-weight:700}
+.daily-chart-bar{width:24px;min-height:3px;border-radius:3px 3px 0 0;transition:height .35s}
+.daily-chart-column small{white-space:nowrap;color:#57677c;font-size:9px}
+.chart-empty{font-size:11px;color:#8390a3;align-self:center;margin:auto}
+.voter-form select{width:100%;border:1px solid #ccdaee;border-radius:8px;padding:13px 14px;font:inherit;font-size:14px;color:#102448;background:#f8fbff}
+.voter-form select:focus{outline:2px solid #3879e9}
+.modal-backdrop{overflow-y:auto;align-items:safe center}
+.modal{max-height:calc(100dvh - 24px);overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin}
+@media(max-width:770px){.results-main{grid-template-columns:1fr;height:auto;flex:auto;min-height:0}.results-panel{min-height:0}.result-analytics{flex:auto;min-height:135px;height:auto}.gender-chart{min-height:125px}.modal{width:min(420px,100%);max-height:calc(100dvh - 20px)}}
+@media(max-width:460px){.result-analytics{grid-template-columns:1fr}.gender-chart{min-height:125px}.voter-form{gap:10px}.voter-form input,.voter-form select{padding:10px 11px}.modal h3{font-size:19px}}
