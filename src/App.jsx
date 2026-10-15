@@ -9,6 +9,17 @@ function Symbol({ type, className = '' }) {
   if (type === 'lamp') return <svg className={className} viewBox="0 0 100 100" aria-hidden="true"><path d="M39 10h22M44 10V5h12v5M50 14v12M31 26h38l8 53H23l8-53ZM35 32l-6 41h42l-6-41H35ZM25 84h50M20 92h60M41 45h18M50 46l-7 19h14l-7-19Z" fill="none" stroke="currentColor" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round"/></svg>;
   return <svg className={className} viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="42" stroke="currentColor" strokeWidth="6" fill="none"/><circle cx="50" cy="50" r="7" fill="currentColor"/>{Array.from({length:12},(_,i)=><line key={i} x1="50" y1="12" x2="50" y2="43" stroke="currentColor" strokeWidth="3.5" transform={'rotate('+(i*30)+' 50 50)'}/>)}</svg>;
 }
+function getAge(dob) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dob || '')) return null;
+  const [year, month, day] = dob.split('-').map(Number);
+  const birth = new Date(year, month - 1, day);
+  if (birth.getFullYear() !== year || birth.getMonth() !== month - 1 || birth.getDate() !== day) return null;
+  const today = new Date();
+  if (birth > today) return null;
+  let age = today.getFullYear() - year;
+  if (today.getMonth() + 1 < month || (today.getMonth() + 1 === month && today.getDate() < day)) age--;
+  return age;
+}
 function SwastikPrint() { return <svg className="swastik-print" viewBox="0 0 180 180" aria-label="Traditional Indian Swastik ink impression" role="img"><g fill="none" stroke="currentColor" strokeWidth="15" strokeLinecap="square" strokeLinejoin="miter"><path d="M86 31V147M31 88H148M86 31H133V57M148 88V132H120M86 147H40V121M31 88V42H58"/></g><g fill="currentColor"><circle cx="52" cy="52" r="5"/><circle cx="129" cy="52" r="5"/><circle cx="52" cy="128" r="5"/><circle cx="127" cy="128" r="5"/></g></svg>; }
 function BallotIllustration(){return <div className="ballot-illustration" aria-hidden="true"><div className="ballot-slip"><Check size={44} strokeWidth={4}/></div><div className="box-lid"/><div className="ballot-box"><span>YOUR VOTE<br/>COUNTS</span></div></div>}
 const fmt = new Intl.NumberFormat('en-IN');
@@ -31,6 +42,8 @@ export default function App(){
   const leader=useMemo(()=>[...candidates].sort((a,b)=>b.votes-a.votes)[0]?.id,[candidates]);
   const ranking=useMemo(()=>[...candidates].sort((a,b)=>b.votes-a.votes),[candidates]);
   const current=candidates.find(c=>c.id===selected);
+  const voterAge = getAge(voter.dob);
+  const isEligible = voterAge !== null && voterAge >= 18;
   function playStamp(){if(muted)return;try{const audioContext=new (window.AudioContext||window.webkitAudioContext)();const osc=audioContext.createOscillator();const gain=audioContext.createGain();osc.type='triangle';osc.frequency.setValueAtTime(125,audioContext.currentTime);osc.frequency.exponentialRampToValueAtTime(48,audioContext.currentTime+.17);gain.gain.setValueAtTime(.14,audioContext.currentTime);gain.gain.exponentialRampToValueAtTime(.001,audioContext.currentTime+.2);osc.connect(gain);gain.connect(audioContext.destination);osc.start();osc.stop(audioContext.currentTime+.21);osc.onended=()=>audioContext.close();}catch{/* audio not available */}}
   function pickStamp(){if(phase==='ready')setPhase('armed');else if(phase==='armed')setPhase('ready');}
   function stampPaper(id,event){
@@ -45,7 +58,7 @@ export default function App(){
   }
   function submitVote(event){
     event.preventDefault();
-    if(!pendingTarget||!voter.name.trim()||!voter.dob||!voter.email.trim())return;
+    if(!pendingTarget||!voter.name.trim()||!isEligible||!voter.email.trim())return;
     const origin=stampRef.current?.getBoundingClientRect();
     if(!origin)return;
     const {id,dx,dy}=pendingTarget;
@@ -75,7 +88,7 @@ export default function App(){
       </section>
       <footer><ShieldCheck size={16}/> Educational frontend demo. Counts are fictional; no server, voter authentication or election security is implemented.</footer>
     </main>
-    {voteFormOpen&&<div className="modal-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget){setVoteFormOpen(false);setPhase('armed');setSelected(null);setPendingTarget(null)}}}><div className="modal" role="dialog" aria-modal="true" aria-labelledby="voter-title"><button className="close" type="button" aria-label="Close voter form" onClick={()=>{setVoteFormOpen(false);setPhase('armed');setSelected(null);setPendingTarget(null)}}><X/></button><h3 id="voter-title">Voter Details</h3><p>You've selected <b>{current?.name}</b>. Enter your details to continue the demo.</p><form className="voter-form" onSubmit={submitVote}><label>Full Name<input autoFocus required type="text" autoComplete="name" maxLength={100} placeholder="Enter your name" value={voter.name} onChange={e=>setVoter(v=>({...v,name:e.target.value}))}/></label><label>Date of Birth<input required type="date" max={new Date().toISOString().slice(0,10)} value={voter.dob} onChange={e=>setVoter(v=>({...v,dob:e.target.value}))}/></label><label>Email Address<input required type="email" autoComplete="email" maxLength={254} placeholder="Enter your email" value={voter.email} onChange={e=>setVoter(v=>({...v,email:e.target.value}))}/></label><p className="modal-note">Frontend demo only: these details are not submitted to a server or permanently stored.</p><button className="voter-submit" type="submit">Vote</button></form></div></div>}
+    {voteFormOpen&&<div className="modal-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget){setVoteFormOpen(false);setPhase('armed');setSelected(null);setPendingTarget(null)}}}><div className="modal" role="dialog" aria-modal="true" aria-labelledby="voter-title"><button className="close" type="button" aria-label="Close voter form" onClick={()=>{setVoteFormOpen(false);setPhase('armed');setSelected(null);setPendingTarget(null)}}><X/></button><h3 id="voter-title">Voter Details</h3><p>You've selected <b>{current?.name}</b>. Enter your details to continue the demo.</p><form className="voter-form" onSubmit={submitVote}><label>Full Name<input autoFocus required type="text" autoComplete="name" maxLength={100} placeholder="Enter your name" value={voter.name} onChange={e=>setVoter(v=>({...v,name:e.target.value}))}/></label><label>Date of Birth<input required type="date" max={new Date().toLocaleDateString("en-CA")} value={voter.dob} onChange={e=>setVoter(v=>({...v,dob:e.target.value}))}/></label>{voter.dob&&<p className={isEligible?'eligibility-ok':'eligibility-error'} role="status">{voterAge===null?'Please enter a valid date of birth.':isEligible?'Eligible to vote — Age: '+voterAge:'Not eligible: You must be at least 18 years old to vote. Current age: '+voterAge}</p>}<label>Email Address<input required type="email" autoComplete="email" maxLength={254} placeholder="Enter your email" value={voter.email} onChange={e=>setVoter(v=>({...v,email:e.target.value}))}/></label><p className="modal-note">Frontend demo only: these details are not submitted to a server or permanently stored.</p><button className="voter-submit" type="submit" disabled={!isEligible}>Vote</button></form></div></div>}
     {tab==='help'&&<div className="modal-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget)setTab('home')}}><div className="modal" role="dialog" aria-modal="true" aria-labelledby="help-title"><button className="close" onClick={()=>setTab('home')} aria-label="Close"><X/></button><h3 id="help-title">How to use the demo</h3><p>First click the red STAMP to pick it up. Next, click one of the five ballot papers. The stamp flies onto it, prints a red Swastik and returns, while the demo result bars update.</p><p className="modal-note">Use Reset Demo to start again. This is not a real election.</p><button className="modal-done" onClick={()=>setTab('home')}>Got it</button></div></div>}
   </div>;
 }
