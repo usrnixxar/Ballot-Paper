@@ -227,3 +227,43 @@
 .ballot-panel::after{z-index:-1}
 .ballot-panel>.ballot-heading,.ballot-panel>.paper-grid,.ballot-panel>.stamp-zone{position:relative;z-index:1}
 @media(max-width:640px){.ballot-panel::before{background-size:cover;opacity:.09}}
+
+/* Mobile layout and patriotic footer refinements */
+.civic-footer{background:linear-gradient(180deg,#fff0dc 0%,#fff7eb 27%,#fff 47%,#f6fff3 70%,#dcf2df 100%);border-top:4px solid #ff9933;border-bottom:4px solid #138808;box-shadow:inset 0 2px 0 #ffffff}
+.civic-footer-slogan{color:#123b74}
+.civic-footer-disclaimer{color:#36536f}
+.stamp-zone .stamp{transform:scale(.82);transform-origin:center bottom;margin:-13px 0 -2px}
+.stamp-zone .stamp:hover:not(:disabled){transform:scale(.82) translateY(-6px) rotate(-2deg)}
+.stamp-zone .stamp.picked{animation:compactStampFloat 1.1s ease-in-out infinite alternate}
+.stamp-zone .stamp.impact{animation:stampDown .85s ease-in-out}
+@keyframes compactStampFloat{from{transform:scale(.82) translateY(-12px) rotate(-5deg)}to{transform:scale(.82) translateY(-22px) rotate(-8deg)}}
+@media(max-width:770px){
+  .patriotic-topbar{display:flex!important;flex-direction:column;justify-content:center;align-items:center;gap:10px;padding:16px 12px!important;min-height:0}
+  .patriotic-topbar .flag-float{position:relative;left:auto;top:auto;transform:none;animation:none;justify-content:center}
+  .patriotic-topbar .flag-mast{height:53px}
+  .patriotic-topbar .flag-cloth{width:62px;height:40px}
+  .patriotic-topbar .patriotic-brand{width:100%;justify-content:center;text-align:center}
+  .patriotic-topbar .patriotic-brand span{text-align:center}
+  .patriotic-topbar .nav-election-center{width:min(100%,350px);justify-self:auto;justify-content:center;text-align:center;padding:9px 12px}
+  .patriotic-topbar .voting-started-banner{position:relative;grid-column:auto;grid-row:auto;justify-self:auto;width:fit-content;max-width:100%;margin:0 auto;text-align:center}
+  .patriotic-topbar nav{width:100%;display:flex;flex-direction:row;justify-content:center;align-items:center;flex-wrap:wrap;gap:6px;grid-column:auto;grid-row:auto}
+  .patriotic-topbar nav button{flex:0 0 auto;display:inline-flex;justify-content:center;align-items:center;text-align:center;padding:9px 11px;font-size:12px}
+  .results-panel,.ballot-panel{width:100%;min-width:0}
+  .results-main{min-width:0;grid-template-columns:minmax(0,1fr)}
+  .result-row{min-width:0}
+  .paper-grid{width:100%;max-width:100%;overflow-x:auto;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch}
+  .stamp-zone .stamp{transform:scale(.7);margin:-24px 0 -8px}
+  .stamp-zone .stamp:hover:not(:disabled){transform:scale(.7) translateY(-6px)}
+  .stamp-zone .stamp.picked{animation:compactStampFloatMobile 1.1s infinite alternate}
+  .civic-footer{text-align:center;max-width:100%}
+}
+@keyframes compactStampFloatMobile{from{transform:scale(.7) translateY(-10px)}to{transform:scale(.7) translateY(-22px) rotate(-5deg)}}
+@media(max-width:420px){
+  .patriotic-topbar nav{gap:4px}
+  .patriotic-topbar nav button{padding:8px 9px;font-size:11px}
+  .patriotic-topbar .nav-election-center{width:100%}
+  .patriotic-topbar .voting-started-banner{font-size:11px!important}
+  .ballot-heading{align-items:center;text-align:center;justify-content:center}
+  .ballot-heading>div:first-child{width:100%;text-align:center}
+}
+@media(prefers-reduced-motion:reduce){.stamp-zone .stamp.picked{animation:none}}
