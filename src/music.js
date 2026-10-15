@@ -34,7 +34,7 @@ export function createAnthemPiano(){
  async function start(){
   if(playing)return;
   if(!context){context=new (window.AudioContext||window.webkitAudioContext)();master=context.createGain();master.gain.value=.09;master.connect(context.destination);}
-  await context.resume();playing=true;generation++;schedule(generation);
+  await context.resume();master.gain.cancelScheduledValues(context.currentTime);master.gain.setTargetAtTime(.09,context.currentTime,.08);playing=true;generation++;schedule(generation);
  }
  function stop(){playing=false;generation++;window.clearTimeout(timeout);if(master&&context){master.gain.cancelScheduledValues(context.currentTime);master.gain.setTargetAtTime(.0001,context.currentTime,.08);}}
  function dispose(){stop();if(context)context.close().catch(()=>{});}
