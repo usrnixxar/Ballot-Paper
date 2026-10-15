@@ -149,3 +149,11 @@
   .hero-art .ballot-illustration{width:104px;height:90px;left:auto;right:8px;top:53%;transform:none}
   .hero-art .ballot-box span{font-size:11px}
 }
+
+/* Civic copy and transparent independent-platform disclaimer. */
+.civic-footer{display:flex;flex-direction:column;align-items:center;gap:7px;margin:14px auto 5px;padding:14px 20px;max-width:1200px;background:#fffcf3;border:1px solid #d7c9ab;clip-path:var(--paper-cut);text-align:center;line-height:1.5}
+.civic-footer-slogan{font-size:15px;font-weight:900;color:#1a3760;letter-spacing:.2px}
+.civic-footer-disclaimer{display:flex;justify-content:center;align-items:center;gap:8px;font-size:11px;color:#5a6580}
+.civic-footer-disclaimer svg{flex-shrink:0}
+.civic-footer-note{font-size:11px;color:#738098}
+@media(max-width:480px){.civic-footer{padding:14px 12px}.civic-footer-slogan{font-size:12px}.civic-footer-disclaimer{font-size:10px}}
