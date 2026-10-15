@@ -46,3 +46,52 @@
 @keyframes celebrationPop{from{opacity:0;transform:translateY(45px) scale(.68)}to{opacity:1;transform:translateY(0) scale(1)}}
 @keyframes partyWiggle{from{transform:rotate(-8deg) scale(.95)}to{transform:rotate(8deg) scale(1.08)}}
 @media(prefers-reduced-motion:reduce){.confetti-piece,.celebration-trophy{animation:none!important}.confetti-piece{display:none}}
+
+/* Paper-cut redesign: rough, gently torn edges across all major UI surfaces.
+   Tiny 1%-2% variations keep contents legible and existing interactions intact. */
+:root{
+  --paper-cut:polygon(
+    0.6% 0.6%,4% 0.2%,8% 0.6%,12% 0.1%,16% 0.6%,20% 0.25%,
+    24% 0.7%,28% 0.2%,32% 0.6%,36% 0.15%,40% 0.6%,44% 0.2%,
+    48% 0.55%,52% 0.1%,56% 0.65%,60% 0.2%,64% 0.55%,68% 0.1%,
+    72% 0.65%,76% 0.2%,80% 0.55%,84% 0.1%,88% 0.65%,92% 0.2%,
+    96% 0.55%,99.3% 0.2%,99.7% 4%,99.2% 9%,99.8% 14%,
+    99.2% 19%,99.7% 24%,99.2% 29%,99.8% 34%,99.2% 39%,
+    99.8% 44%,99.2% 49%,99.7% 54%,99.2% 59%,99.8% 64%,
+    99.2% 69%,99.8% 74%,99.2% 79%,99.7% 84%,99.2% 89%,
+    99.8% 94%,99.3% 99.7%,96% 99.2%,92% 99.8%,88% 99.3%,
+    84% 99.85%,80% 99.3%,76% 99.8%,72% 99.3%,68% 99.85%,
+    64% 99.3%,60% 99.8%,56% 99.35%,52% 99.85%,48% 99.3%,
+    44% 99.8%,40% 99.35%,36% 99.85%,32% 99.3%,28% 99.8%,
+    24% 99.35%,20% 99.85%,16% 99.3%,12% 99.8%,8% 99.3%,
+    4% 99.85%,0.5% 99.4%,0.2% 94%,0.7% 89%,0.2% 84%,
+    0.7% 79%,0.2% 74%,0.7% 69%,0.2% 64%,0.7% 59%,
+    0.2% 54%,0.7% 49%,0.2% 44%,0.7% 39%,0.2% 34%,
+    0.7% 29%,0.2% 24%,0.7% 19%,0.2% 14%,0.7% 9%,0.2% 4%);
+}
+.results-panel,.results-hero,.result-row,.ballot-panel,.paper,
+.motto,.modal,.celebration-dialog,.celebration-candidate,
+.security,.stamp-zone>p,.utility button,
+.topbar nav button.active,.ballot-circle,
+.voter-form input,.voter-submit,.modal-actions button,
+.modal-done,.celebration-close{
+  border-radius:3px!important;
+  clip-path:var(--paper-cut);
+}
+/* Fibrous paper flecks, rather than flat plastic-looking panels. */
+.results-panel,.result-row,.ballot-panel,.paper,.modal,.celebration-dialog{
+  background-image:
+    radial-gradient(circle at 14% 27%,rgba(136,111,70,.065) 0 1px,transparent 1.5px),
+    radial-gradient(circle at 83% 65%,rgba(77,88,111,.055) 0 1px,transparent 1.5px),
+    repeating-linear-gradient(16deg,transparent 0 21px,rgba(110,90,70,.018) 22px 23px,transparent 24px 42px);
+  background-blend-mode:multiply;
+}
+.result-row{background-color:#fffdf9}
+.result-row.is-leading{background-color:#fff5dc}
+.results-panel{background-color:#fafcff}
+.ballot-panel{background-color:#fff7ea}
+.paper{background-color:#fffbf1}
+.modal,.celebration-dialog{background-color:#fffdf8}
+/* Keep stamped impression and paper selection visible with paper-cut outlines. */
+.paper.selected{outline:1px solid #ef475a;outline-offset:-4px}
+@media(max-width:770px){.paper{border-radius:2px!important}}
