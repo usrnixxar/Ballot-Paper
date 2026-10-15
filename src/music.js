@@ -16,7 +16,7 @@ export function createAnthemPiano(){
   [1,2,3].forEach((multiple,i)=>{
    const osc=context.createOscillator(),gain=context.createGain();
    osc.type='sine';osc.frequency.setValueAtTime(hz*multiple,start);
-   const amp=[.32,.07,.025][i];
+   const amp=[.46,.13,.05][i];
    gain.gain.setValueAtTime(.0001,start);
    gain.gain.exponentialRampToValueAtTime(amp,start+.012);
    gain.gain.exponentialRampToValueAtTime(.0001,start+Math.max(.18,duration*.92));
@@ -33,8 +33,13 @@ export function createAnthemPiano(){
  }
  async function start(){
   if(playing)return;
-  if(!context){context=new (window.AudioContext||window.webkitAudioContext)();master=context.createGain();master.gain.value=.09;master.connect(context.destination);}
-  await context.resume();master.gain.cancelScheduledValues(context.currentTime);master.gain.setTargetAtTime(.09,context.currentTime,.08);playing=true;generation++;schedule(generation);
+  if(!context){context=new (window.AudioContext||window.webkitAudioContext)();master=context.createGain();master.gain.value=.25;master.connect(context.destination);}
+  // Schedule synchronously inside the user's click before awaiting resume(),
+  // preserving browser user-activation permissions for Web Audio.
+  playing=true;generation++;const token=generation;
+  master.gain.cancelScheduledValues(context.currentTime);master.gain.setTargetAtTime(.25,context.currentTime,.08);
+  schedule(token);
+  try { await context.resume(); } catch(error) { stop(); throw error; }
  }
  function stop(){playing=false;generation++;window.clearTimeout(timeout);if(master&&context){master.gain.cancelScheduledValues(context.currentTime);master.gain.setTargetAtTime(.0001,context.currentTime,.08);}}
  function dispose(){stop();if(context)context.close().catch(()=>{});}
