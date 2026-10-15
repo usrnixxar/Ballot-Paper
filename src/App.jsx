@@ -40,7 +40,7 @@ export default function App(){
   const [pendingTarget,setPendingTarget]=useState(null);
   useEffect(()=>()=>{window.clearTimeout(timer.current);window.clearTimeout(resultTimer.current)},[]);
   const total=useMemo(()=>candidates.reduce((sum,c)=>sum+c.votes,0),[candidates]);
-  const leader=useMemo(()=>[...candidates].sort((a,b)=>b.votes-a.votes)[0]?.id,[candidates]);
+  const leader=useMemo(()=>total>0?[...candidates].sort((a,b)=>b.votes-a.votes)[0]?.id:null,[candidates,total]);
   const ranking=useMemo(()=>[...candidates].sort((a,b)=>b.votes-a.votes),[candidates]);
   const current=candidates.find(c=>c.id===selected);
   const voterAge = getAge(voter.dob);
@@ -79,7 +79,7 @@ export default function App(){
     <main>
       <section className="results-panel" id="result-section" aria-label="Demo election results">
         <div className="results-hero"><div className="hero-art"><div className="sparkles">✦ &nbsp; ✧ &nbsp; ✦</div><h1>Election <span>Result</span></h1><p>Total Votes Cast</p><div className="total-count" aria-live="polite">{fmt.format(total)}</div><BallotIllustration/><div className="motto"><BarChart3/><div><b>Peaceful. Fair. Digital.</b><small>People Decide a Brighter Tomorrow.</small></div></div></div></div>
-        <div className="leaderboard">{ranking.map((c,i)=><div className={'result-row '+(c.id===leader?'is-leading':'')} key={c.id} style={{'--candidate-color':c.color,'--delay':(i*80)+'ms'}}><span className="rank">{i+1}</span><span className="result-symbol"><Symbol type={c.symbol}/></span><span className="candidate-result-name">{c.name}</span><span className="votes"><strong>{fmt.format(c.votes)}</strong> votes</span><span className="percentage">{(c.votes/total*100).toFixed(1)}%</span><div className="bar-track"><div className="bar-fill" style={{width:(c.votes/total*100)+'%'}}/></div>{c.id===leader&&<span className="leading"><Crown/> <span>Leading</span></span>}</div>)}</div>
+        <div className="leaderboard">{ranking.map((c,i)=><div className={'result-row '+(c.id===leader?'is-leading':'')} key={c.id} style={{'--candidate-color':c.color,'--delay':(i*80)+'ms'}}><span className="rank">{i+1}</span><span className="result-symbol"><Symbol type={c.symbol}/></span><span className="candidate-result-name">{c.name}</span><span className="votes"><strong>{fmt.format(c.votes)}</strong> votes</span><span className="percentage">{(total>0?c.votes/total*100:0).toFixed(1)}%</span><div className="bar-track"><div className="bar-fill" style={{width:(total>0?c.votes/total*100:0)+'%'}}/></div>{c.id===leader&&<span className="leading"><Crown/> <span>Leading</span></span>}</div>)}</div>
       </section>
       <section className="ballot-panel" id="ballot-section" aria-label="Digital ballot paper">
         <div className="ballot-heading"><div><h2><span className="heading-emoji">🗳️</span> Digital Ballot Paper</h2><p>Pick up the stamp first, then click a ballot paper to stamp your vote.</p></div><div className="security"><Info size={18}/> Simulation only — no real vote stored</div></div>
