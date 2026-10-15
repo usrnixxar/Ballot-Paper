@@ -193,3 +193,14 @@
 .paper .ballot-circle{display:none!important}
 @media(max-width:770px){.paper-image-area{min-height:115px}.paper-image-area .paper-symbol{height:115px}}
 @media(max-width:480px){.result-symbol img,.result-symbol svg{width:27px;height:27px}.paper-image-area .paper-symbol{height:105px}}
+
+/* Clearly visible voting start date in the patriotic navbar. */
+.patriotic-topbar .voting-started-banner{grid-column:1/-1;grid-row:2;justify-self:center;display:flex;align-items:center;justify-content:center;gap:9px;background:linear-gradient(110deg,#fff1ce,#ffe0a6);border:1px solid #f3a93a;border-radius:999px;padding:9px 19px;color:#8a3700;font-size:13px;font-weight:900;letter-spacing:.15px;box-shadow:0 3px 14px #f6a63455;animation:votingBannerGlow 2.6s ease-in-out infinite}
+.patriotic-topbar{grid-template-rows:auto auto}
+.patriotic-topbar nav{grid-column:3;grid-row:1}
+.voting-started-dot{height:10px;width:10px;background:#ef342a;border-radius:50%;box-shadow:0 0 0 4px #ef342a2b;animation:votingDatePulse 1.6s ease-in-out infinite;flex-shrink:0}
+@keyframes votingBannerGlow{50%{box-shadow:0 4px 20px #f5a03295;transform:translateY(-1px)}}
+@keyframes votingDatePulse{50%{box-shadow:0 0 0 8px #ef342a00}}
+@media(max-width:1150px){.patriotic-topbar nav{grid-column:1/-1;grid-row:auto}.patriotic-topbar .voting-started-banner{grid-row:auto;grid-column:1/-1}}
+@media(max-width:640px){.patriotic-topbar .voting-started-banner{font-size:10px;padding:8px 10px;text-align:center;max-width:100%;white-space:normal}}
+@media(prefers-reduced-motion:reduce){.patriotic-topbar .voting-started-banner,.voting-started-dot{animation:none}}
