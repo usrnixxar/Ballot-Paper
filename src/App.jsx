@@ -74,8 +74,10 @@ export default function App(){
       setCandidates(rows.map(c=>({...c,votes:results.counts[c.id]||0,imageUrl:c.imageUrl?API_URL+c.imageUrl:null})));
       setDailyVotes(results.daily.flatMap(d=>Array.from({length:Math.min(d.count,1000)},()=>({day:d.day}))));
     }catch(e){if(active)console.warn('Backend API unavailable',e.message);}}
-    refresh();api('visit',{method:'POST',body:'{}'}).catch(()=>{});
-    const a=setInterval(refresh,10000),b=setInterval(()=>api('visit',{method:'POST',body:'{}'}).catch(()=>{}),120000);
+    const visitorId=(()=>{let value=sessionStorage.getItem('ballot_visit_id');if(!value){value=crypto.randomUUID();sessionStorage.setItem('ballot_visit_id',value);}return value;})();
+    const visit=()=>api('visit',{method:'POST',body:JSON.stringify({sessionId:visitorId})}).catch(()=>{});
+    refresh();visit();
+    const a=setInterval(refresh,10000),b=setInterval(visit,120000);
     return ()=>{active=false;clearInterval(a);clearInterval(b);};
   },[]);
   const total=useMemo(()=>candidates.reduce((sum,c)=>sum+c.votes,0),[candidates]);
